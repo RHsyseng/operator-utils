@@ -1,28 +1,96 @@
 package openshift
 
 import (
-	"golang.org/x/text/language"
-	"golang.org/x/text/search"
-	"k8s.io/client-go/kubernetes"
+	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+
+	runtime "k8s.io/apimachinery/pkg/runtime"
+	v1 "k8s.io/apimachinery/pkg/runtime/schema"
+	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
+var log = logf.Log.WithName("env")
+
 // IsOpenShift checks for the OpenShift API
-func IsOpenShift(config *rest.Config) (bool, error) {
-	clientset, err := kubernetes.NewForConfig(config)
+func IsOpenShift() (bool, error) {
+	log.Info("Detect if openshift is running")
+
+	value, ok := os.LookupEnv("OPERATOR_OPENSHIFT")
+	if ok {
+		log.Info("Set by env-var 'OPERATOR_OPENSHIFT': " + value)
+		return strings.ToLower(value) == "true", nil
+	}
+
+	cfg, err := config.GetConfig()
 	if err != nil {
+		log.Error(err, "Error getting config: %v")
 		return false, err
 	}
-	apiSchema, err := clientset.OpenAPISchema()
+
+	groupName := "route.openshift.io"
+	gv := v1.GroupVersion{Group: groupName, Version: "v1"}
+	cfg.APIPath = "/apis"
+
+	scheme := runtime.NewScheme()
+	codecs := serializer.NewCodecFactory(scheme)
+
+	cfg.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: codecs}
+
+	if cfg.UserAgent == "" {
+		cfg.UserAgent = rest.DefaultKubernetesUserAgent()
+	}
+
+	cfg.GroupVersion = &gv
+
+	client, err := rest.RESTClientFor(cfg)
+
 	if err != nil {
+		log.Error(err, "Error getting client: %v")
 		return false, err
 	}
-	return stringSearch(apiSchema.GetInfo().Title, "openshift"), nil
+	if err == nil {
+		getOpenShiftEnvVersion(cfg.Host)
+	}
+
+	_, err = client.Get().DoRaw()
+
+	return err == nil, nil
+}
+func getOpenShiftEnvVersion(url string) {
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	req, err := http.NewRequest("GET", url+"/version/openshift?timeout=32s", nil)
+	if err != nil {
+		log.Error(err, "Error to make http call to get openshift version : %v")
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error(err, "Error to make http call to get openshift version : %v")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Error(err, "Error in reading resp.Body: %v")
+		}
+		var data map[string]interface{}
+		json.Unmarshal(bodyBytes, &data)
+		log.Info(fmt.Sprintf("OpenShift Version is %s.%s", data["major"], data["minor"]))
+
+	}
+
 }
 
-func stringSearch(str string, substr string) bool {
-	if start, _ := search.New(language.English, search.IgnoreCase).IndexString(str, substr); start == -1 {
-		return false
-	}
-	return true
-}
