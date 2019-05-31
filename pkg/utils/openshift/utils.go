@@ -28,6 +28,8 @@ func IsOpenShift() (bool, error) {
 	if ok {
 		log.Info("Set by env-var 'OPERATOR_OPENSHIFT': " + value)
 		return strings.ToLower(value) == "true", nil
+	} else {
+		log.Info("env-var lookup failed" + value)
 	}
 
 	cfg, err := config.GetConfig()
