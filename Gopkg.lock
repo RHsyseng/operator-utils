@@ -176,22 +176,6 @@
   revision = "eeefdecb41b842af6dc652aaea4026e8403e62df"
 
 [[projects]]
-  digest = "1:edd2fa4578eb086265db78a9201d15e76b298dfd0d5c379da83e9c61712cf6df"
-  name = "github.com/go-logr/logr"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "9fb12b3b21c5415d16ac18dc5cd42c1cfdd40c4e"
-  version = "v0.1.0"
-
-[[projects]]
-  digest = "1:d81dfed1aa731d8e4a45d87154ec15ef18da2aa80fa9a2f95bec38577a244a99"
-  name = "github.com/go-logr/zapr"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "03f06a783fbb7dfaf3f629c7825480e43a7105e6"
-  version = "v0.1.1"
-
-[[projects]]
   digest = "1:8c4be86399428a81749056c2d67feba95c1784b742ccf03ac7527d0b426bf22a"
   name = "github.com/go-openapi/analysis"
   packages = [
@@ -350,28 +334,12 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:125799d8e66a38cedc449d7595e8a84ba90f7cd823bd4e9df00d1216390768d6"
-  name = "github.com/jeremyary/enmasse"
-  packages = ["pkg/util"]
-  pruneopts = "UT"
-  revision = "22b26fda68318c4dc917bd0b86fa7d5096b32174"
-  version = "0.27.2"
-
-[[projects]]
   digest = "1:75ab90ae3f5d876167e60f493beadfe66f0ed861a710f283fb06c86437a09538"
   name = "github.com/jonboulle/clockwork"
   packages = ["."]
   pruneopts = "UT"
   revision = "2eee05ed794112d45db504eb05aa693efd2b8b09"
   version = "v0.1.0"
-
-[[projects]]
-  digest = "1:eaefc85d32c03e5f0c2b88ea2f79fce3d993e2c78316d21319575dd4ea9153ca"
-  name = "github.com/json-iterator/go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ab8a2e0c74be9d3be70b3184d9acc634935ded82"
-  version = "1.1.4"
 
 [[projects]]
   digest = "1:190ff84d9b2ed6589088f178cba8edb4b8ecb334df4572421fb016be1ac20463"
@@ -402,47 +370,12 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
-  name = "github.com/modern-go/concurrent"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
-  version = "1.0.3"
-
-[[projects]]
-  digest = "1:c56ad36f5722eb07926c979d5e80676ee007a9e39e7808577b9d87ec92b00460"
-  name = "github.com/modern-go/reflect2"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "94122c33edd36123c84d5368cfb2b69df93a0ec8"
-  version = "v1.0.1"
-
-[[projects]]
   digest = "1:ee4d4af67d93cc7644157882329023ce9a7bcfce956a079069a9405521c7cc8d"
   name = "github.com/opencontainers/go-digest"
   packages = ["."]
   pruneopts = "UT"
   revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
   version = "v1.0.0-rc1"
-
-[[projects]]
-  digest = "1:e6deb5269daaf7ab91e3a04a1570d690a60a982d595d090882cee3ded817bb04"
-  name = "github.com/openshift/api"
-  packages = ["route/v1"]
-  pruneopts = "UT"
-  revision = "0d921e363e951d89f583292c60d013c318df64dc"
-  version = "v3.9.0"
-
-[[projects]]
-  digest = "1:bd4946be1f134e0bff597a3438d2c6a435690953d4ebfcce514d898e42c40ea6"
-  name = "github.com/openshift/client-go"
-  packages = [
-    "route/clientset/versioned/scheme",
-    "route/clientset/versioned/typed/route/v1",
-  ]
-  pruneopts = "UT"
-  revision = "1fa528d3be060e4c7178eb69e76d37cf7e699e3c"
-  version = "v3.9.0"
 
 [[projects]]
   digest = "1:e5d0bd87abc2781d14e274807a470acd180f0499f8bf5bb18606e9ec22ad9de9"
@@ -491,37 +424,6 @@
   pruneopts = "UT"
   revision = "2adff0894ba3bc2eeb9f9aea45fefd49802e1a13"
   version = "v1.1.4"
-
-[[projects]]
-  digest = "1:a5158647b553c61877aa9ae74f4015000294e47981e6b8b07525edcbb0747c81"
-  name = "go.uber.org/atomic"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "df976f2515e274675050de7b3f42545de80594fd"
-  version = "v1.4.0"
-
-[[projects]]
-  digest = "1:60bf2a5e347af463c42ed31a493d817f8a72f102543060ed992754e689805d1a"
-  name = "go.uber.org/multierr"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
-  version = "v1.1.0"
-
-[[projects]]
-  digest = "1:676160e6a4722b08e0e26b11521d575c2cb2b6f0c679e1ee6178c5d8dee51e5e"
-  name = "go.uber.org/zap"
-  packages = [
-    ".",
-    "buffer",
-    "internal/bufferpool",
-    "internal/color",
-    "internal/exit",
-    "zapcore",
-  ]
-  pruneopts = "UT"
-  revision = "27376062155ad36be76b0f12cf1572a221d3a48c"
-  version = "v1.10.0"
 
 [[projects]]
   digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
@@ -593,13 +495,6 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:d37b0ef2944431fe9e8ef35c6fffc8990d9e2ca300588df94a6890f3649ae365"
-  name = "golang.org/x/time"
-  packages = ["rate"]
-  pruneopts = "UT"
-  revision = "f51c12702a4d776e4c1fa9b0fabab841babae631"
-
-[[projects]]
   digest = "1:04f2ff15fc59e1ddaf9900ad0e19e5b19586b31f9dafd4d592b617642b239d8f"
   name = "google.golang.org/appengine"
   packages = [
@@ -633,86 +528,6 @@
   pruneopts = "UT"
   revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
   version = "v2.2.2"
-
-[[projects]]
-  branch = "master"
-  digest = "1:9d5352ef8744149aca21ca4f7cd21eac9f05932edda625c2b343edd105b6acca"
-  name = "k8s.io/api"
-  packages = ["core/v1"]
-  pruneopts = "UT"
-  revision = "40a36c6fb21673b929b34b072a89b484c8f0a09b"
-
-[[projects]]
-  digest = "1:b2cfe244b03da212f079df14c605a5b11f81172106320f1cf415fc49dff74ebf"
-  name = "k8s.io/apimachinery"
-  packages = [
-    "pkg/api/errors",
-    "pkg/api/meta",
-    "pkg/api/resource",
-    "pkg/apis/meta/v1",
-    "pkg/apis/meta/v1/unstructured",
-    "pkg/apis/meta/v1beta1",
-    "pkg/conversion",
-    "pkg/conversion/queryparams",
-    "pkg/fields",
-    "pkg/labels",
-    "pkg/runtime",
-    "pkg/runtime/schema",
-    "pkg/runtime/serializer",
-    "pkg/runtime/serializer/json",
-    "pkg/runtime/serializer/protobuf",
-    "pkg/runtime/serializer/recognizer",
-    "pkg/runtime/serializer/streaming",
-    "pkg/runtime/serializer/versioning",
-    "pkg/selection",
-    "pkg/types",
-    "pkg/util/clock",
-    "pkg/util/errors",
-    "pkg/util/framer",
-    "pkg/util/intstr",
-    "pkg/util/json",
-    "pkg/util/naming",
-    "pkg/util/net",
-    "pkg/util/runtime",
-    "pkg/util/sets",
-    "pkg/util/validation",
-    "pkg/util/validation/field",
-    "pkg/util/yaml",
-    "pkg/version",
-    "pkg/watch",
-    "third_party/forked/golang/reflect",
-  ]
-  pruneopts = "UT"
-  revision = "2b1284ed4c93a43499e781493253e2ac5959c4fd"
-  version = "kubernetes-1.13.1"
-
-[[projects]]
-  digest = "1:0c990b8cebd3c9d559f17e734c870a2ad226e649789bbbce08b5cd811509a0a5"
-  name = "k8s.io/client-go"
-  packages = [
-    "pkg/apis/clientauthentication",
-    "pkg/apis/clientauthentication/v1alpha1",
-    "pkg/apis/clientauthentication/v1beta1",
-    "pkg/version",
-    "plugin/pkg/client/auth/exec",
-    "rest",
-    "rest/watch",
-    "tools/auth",
-    "tools/clientcmd",
-    "tools/clientcmd/api",
-    "tools/clientcmd/api/latest",
-    "tools/clientcmd/api/v1",
-    "tools/metrics",
-    "transport",
-    "util/cert",
-    "util/connrotation",
-    "util/flowcontrol",
-    "util/homedir",
-    "util/integer",
-  ]
-  pruneopts = "UT"
-  revision = "8d9ed539ba3134352c586810e749e58df4e94e4f"
-  version = "kubernetes-1.13.1"
 
 [[projects]]
   digest = "1:72fd56341405f53c745377e0ebc4abeff87f1a048e0eea6568a20212650f5a82"
@@ -895,25 +710,6 @@
   revision = "e8c167a115ec662726904265d17f75a6d79d78d8"
   version = "v1.5.8"
 
-[[projects]]
-  digest = "1:67bbb2cffedfe09e5477ba5299ae563a57e43875bae7587174f14cd07442e615"
-  name = "sigs.k8s.io/controller-runtime"
-  packages = [
-    "pkg/client/config",
-    "pkg/runtime/log",
-  ]
-  pruneopts = "UT"
-  revision = "12d98582e72927b6cd0123e2b4e819f9341ce62c"
-  version = "v0.1.10"
-
-[[projects]]
-  digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
-  name = "sigs.k8s.io/yaml"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "fd68e9863619f6ec2fdd8625fe1f02e7c877e480"
-  version = "v1.1.0"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -922,8 +718,8 @@
     "github.com/go-openapi/spec",
     "github.com/go-openapi/strfmt",
     "github.com/go-openapi/validate",
-    "github.com/jeremyary/enmasse/pkg/util",
     "github.com/stretchr/testify/assert",
+    "k8s.io/klog",
     "k8s.io/kubernetes/pkg/api/unversioned",
     "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset",
     "k8s.io/kubernetes/pkg/client/restclient",
