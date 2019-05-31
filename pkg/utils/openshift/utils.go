@@ -1,96 +1,62 @@
 package openshift
 
 import (
-	"crypto/tls"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strings"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	log "k8s.io/klog"
+	api "k8s.io/kubernetes/pkg/api/unversioned"
+	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	restclient "k8s.io/kubernetes/pkg/client/restclient"
+	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 )
 
-var log = logf.Log.WithName("env")
+type MasterType string
 
-// IsOpenShift checks for the OpenShift API
+const (
+	OpenShift  MasterType = "OpenShift"
+	Kubernetes MasterType = "Kubernetes"
+)
+
 func IsOpenShift() (bool, error) {
 
-	log.Info("Detect if openshift is running")
+	client, _ := NewClient(cmdutil.NewFactory(nil))
+	typeOfMaster := TypeOfMaster(client)
 
-	value, ok := os.LookupEnv("OPERATOR_OPENSHIFT")
-	if ok {
-		log.Info("Set by env-var 'OPERATOR_OPENSHIFT': " + value)
-		return strings.ToLower(value) == "true", nil
-	} else {
-		log.Info("env-var lookup failed" + value)
-	}
-
-	cfg, err := config.GetConfig()
-	if err != nil {
-		log.Error(err, "Error getting config: %v")
-		return false, err
-	}
-
-	groupName := "route.openshift.io"
-	gv := schema.GroupVersion{Group: groupName, Version: "v1"}
-	cfg.APIPath = "/apis"
-
-	scheme := runtime.NewScheme()
-	codecs := serializer.NewCodecFactory(scheme)
-
-	cfg.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: codecs}
-
-	if cfg.UserAgent == "" {
-		cfg.UserAgent = rest.DefaultKubernetesUserAgent()
-	}
-
-	cfg.GroupVersion = &gv
-
-	client, err := rest.RESTClientFor(cfg)
-
-	if err != nil {
-		log.Error(err, "Error getting client: %v")
-		return false, err
-	}
-	getOpenShiftEnvVersion(cfg.Host)
-
-	_, err = client.Get().DoRaw()
-
-	return err == nil, nil
+	return typeOfMaster == OpenShift, nil
 }
-func getOpenShiftEnvVersion(url string) {
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-
-	req, err := http.NewRequest("GET", url+"/version/openshift?timeout=32s", nil)
+func TypeOfMaster(c *clientset.Clientset) MasterType {
+	res, err := c.CoreClient.RESTClient().Get().AbsPath("").DoRaw()
 	if err != nil {
-		log.Error(err, "Error to make http call to get openshift version : %v")
+		log.Fatalf("Could not discover the type of your installation: %v", err)
 	}
 
-	resp, err := client.Do(req)
+	var rp api.RootPaths
+	err = json.Unmarshal(res, &rp)
 	if err != nil {
-		log.Error(err, "Error to make http call to get openshift version : %v")
+		log.Fatalf("Could not discover the type of your installation: %v", err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Error(err, "Error in reading resp.Body: %v")
+	for _, p := range rp.Paths {
+		if p == "/oapi" {
+			return OpenShift
 		}
-		var data map[string]interface{}
-		json.Unmarshal(bodyBytes, &data)
-		log.Info(fmt.Sprintf("OpenShift Version is %s.%s", data["major"], data["minor"]))
+	}
+	return Kubernetes
+}
 
+func NewClient(f cmdutil.Factory) (*clientset.Clientset, *restclient.Config) {
+	var err error
+
+	cfg, err := f.ClientConfig()
+	if err != nil {
+		log.Error("Could not initialise a client - is your server setting correct?\n\n")
+		log.Fatalf("%v", err)
 	}
 
+	c, err := clientset.NewForConfig(cfg)
+	if err != nil {
+		log.Fatalf("Could not initialise a client: %v", err)
+	}
+
+	return c, cfg
 }
