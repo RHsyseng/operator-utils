@@ -2,22 +2,26 @@ package openshift
 
 import (
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 var log = logf.Log.WithName("env")
 
-func IsOpenShift() (bool, error) {
+func IsOpenShift(cfg *rest.Config) (bool, error) {
 	log.Info("attempting detection of OpenShift platform...")
 
-	kubeconfig, err := config.GetConfig()
-	if err != nil {
-		log.Error(err, "error in fetching config, returning false")
-		return false, err
+	if cfg == nil {
+		var err error
+		cfg, err = config.GetConfig()
+		if err != nil {
+			log.Error(err, "error in fetching config, returning false")
+			return false, err
+		}
 	}
 
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(kubeconfig)
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(cfg)
 	if err != nil {
 		log.Error(err, "error in fetching discovery client, returning false")
 		return false, err
