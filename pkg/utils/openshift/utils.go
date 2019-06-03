@@ -6,35 +6,36 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-//type MasterType string
-//
-//const (
-//	OpenShift  MasterType = "OpenShift"
-//	Kubernetes MasterType = "Kubernetes"
-//)
-
 var log = logf.Log.WithName("env")
 
 func IsOpenShift() (bool, error) {
+	log.Info("attempting detection of OpenShift platform...")
+
 	kubeconfig, err := config.GetConfig()
 	if err != nil {
+		log.Error(err, "error in fetching config, returning false")
 		return false, err
 	}
+
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(kubeconfig)
 	if err != nil {
+		log.Error(err, "error in fetching discovery client, returning false")
 		return false, err
 	}
+
 	apiList, err := discoveryClient.ServerGroups()
 	if err != nil {
+		log.Error(err, "error in getting ServerGroups from discovery client, returning false")
 		return false, err
 	}
-	apiGroups := apiList.Groups
-	log.Info("In IsOpenshift", "apiGroups", apiGroups)
-	for i := 0; i < len(apiGroups); i++ {
-		if apiGroups[i].Name == "route.openshift.io" {
-			log.Info("In IsOpenshift => returning true, nil")
+
+	for _, v := range apiList.Groups {
+		if v.Name == "route.openshift.io" {
+			log.Info("OpenShift route detected in api groups, returning true")
 			return true, nil
 		}
 	}
+
+	log.Info("OpenShift route not found in groups, returning false")
 	return false, nil
 }
