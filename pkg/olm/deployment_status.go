@@ -9,18 +9,18 @@ import (
 var log = logf.Log.WithName("olm")
 
 func GetDaemonSetStatus(dcs []appsv1.DaemonSet) DeploymentStatus {
-	return getDeploymentStatus(deployments{
+	return getDeploymentStatus(deploymentsWrapper{
 		countFunc: func() int {
 			return len(dcs)
 		},
 		nameFunc: func(i int) string {
 			return dcs[i].Name
 		},
-		specReplicasFunc: func(i int) int32 {
-			//DaemonSet means one replica per node, so more than zero requested and can return 1:
+		requestedReplicasFunc: func(i int) int32 {
+			//DaemonSet means an implicit replica count request of one per node, return >0:
 			return 1
 		},
-		statusReplicasFunc: func(i int) int32 {
+		targetReplicasFunc: func(i int) int32 {
 			return dcs[i].Status.DesiredNumberScheduled
 		},
 		readyReplicasFunc: func(i int) int32 {
@@ -30,14 +30,14 @@ func GetDaemonSetStatus(dcs []appsv1.DaemonSet) DeploymentStatus {
 }
 
 func GetDeploymentStatus(dcs []appsv1.Deployment) DeploymentStatus {
-	return getDeploymentStatus(deployments{
+	return getDeploymentStatus(deploymentsWrapper{
 		countFunc: func() int {
 			return len(dcs)
 		},
 		nameFunc: func(i int) string {
 			return dcs[i].Name
 		},
-		specReplicasFunc: func(i int) int32 {
+		requestedReplicasFunc: func(i int) int32 {
 			intPtr := dcs[i].Spec.Replicas
 			if intPtr == nil {
 				return 0
@@ -45,7 +45,7 @@ func GetDeploymentStatus(dcs []appsv1.Deployment) DeploymentStatus {
 				return *intPtr
 			}
 		},
-		statusReplicasFunc: func(i int) int32 {
+		targetReplicasFunc: func(i int) int32 {
 			return dcs[i].Status.Replicas
 		},
 		readyReplicasFunc: func(i int) int32 {
@@ -55,17 +55,17 @@ func GetDeploymentStatus(dcs []appsv1.Deployment) DeploymentStatus {
 }
 
 func GetDeploymentConfigStatus(dcs []oappsv1.DeploymentConfig) DeploymentStatus {
-	return getDeploymentStatus(deployments{
+	return getDeploymentStatus(deploymentsWrapper{
 		countFunc: func() int {
 			return len(dcs)
 		},
 		nameFunc: func(i int) string {
 			return dcs[i].Name
 		},
-		specReplicasFunc: func(i int) int32 {
+		requestedReplicasFunc: func(i int) int32 {
 			return dcs[i].Spec.Replicas
 		},
-		statusReplicasFunc: func(i int) int32 {
+		targetReplicasFunc: func(i int) int32 {
 			return dcs[i].Status.Replicas
 		},
 		readyReplicasFunc: func(i int) int32 {
@@ -77,11 +77,11 @@ func GetDeploymentConfigStatus(dcs []oappsv1.DeploymentConfig) DeploymentStatus 
 func getDeploymentStatus(obj deployments) DeploymentStatus {
 	var ready, starting, stopped []string
 	for i := 0; i < obj.count(); i++ {
-		if obj.specReplicas(i) == 0 {
+		if obj.requestedReplicas(i) == 0 {
 			stopped = append(stopped, obj.name(i))
-		} else if obj.statusReplicas(i) == 0 {
+		} else if obj.targetReplicas(i) == 0 {
 			stopped = append(stopped, obj.name(i))
-		} else if obj.readyReplicas(i) < obj.statusReplicas(i) {
+		} else if obj.readyReplicas(i) < obj.targetReplicas(i) {
 			starting = append(starting, obj.name(i))
 		} else {
 			ready = append(ready, obj.name(i))

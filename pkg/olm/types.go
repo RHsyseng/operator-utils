@@ -41,30 +41,38 @@ func (in *DeploymentStatus) DeepCopy() *DeploymentStatus {
 	return out
 }
 
-type deployments struct {
-	countFunc          func() int
-	nameFunc           func(i int) string
-	specReplicasFunc   func(i int) int32
-	statusReplicasFunc func(i int) int32
-	readyReplicasFunc  func(i int) int32
+type deployments interface {
+	count() int
+	name(i int) string
+	requestedReplicas(i int) int32
+	targetReplicas(i int) int32
+	readyReplicas(i int) int32
 }
 
-func (obj deployments) count() int {
+type deploymentsWrapper struct {
+	countFunc             func() int
+	nameFunc              func(i int) string
+	requestedReplicasFunc func(i int) int32
+	targetReplicasFunc    func(i int) int32
+	readyReplicasFunc     func(i int) int32
+}
+
+func (obj deploymentsWrapper) count() int {
 	return obj.countFunc()
 }
 
-func (obj deployments) name(i int) string {
+func (obj deploymentsWrapper) name(i int) string {
 	return obj.nameFunc(i)
 }
 
-func (obj deployments) specReplicas(i int) int32 {
-	return obj.specReplicasFunc(i)
+func (obj deploymentsWrapper) requestedReplicas(i int) int32 {
+	return obj.requestedReplicasFunc(i)
 }
 
-func (obj deployments) statusReplicas(i int) int32 {
-	return obj.statusReplicasFunc(i)
+func (obj deploymentsWrapper) targetReplicas(i int) int32 {
+	return obj.targetReplicasFunc(i)
 }
 
-func (obj deployments) readyReplicas(i int) int32 {
+func (obj deploymentsWrapper) readyReplicas(i int) int32 {
 	return obj.readyReplicasFunc(i)
 }
