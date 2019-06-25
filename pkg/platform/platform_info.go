@@ -47,6 +47,25 @@ func (info PlatformInfo) IsKubernetes() bool {
 	return info.Name == Kubernetes
 }
 
+func (info *PlatformInfo) ApproximateOpenShiftVersion() {
+
+	if info.K8SVersion == "" || info.Name == Kubernetes {
+		return
+	}
+	switch info.K8SVersion {
+	case "1.10+":
+		info.OCPVersion = "3.10"
+	case "1.11+":
+		info.OCPVersion = "3.11"
+	case "1.13+":
+		info.OCPVersion = "4.1"
+	default:
+		log.Info("unable to version-match OCP to K8S version " + info.K8SVersion)
+		info.OCPVersion = ""
+		return
+	}
+}
+
 func (info PlatformInfo) String() string {
 	return "PlatformInfo [" +
 		"Name: " + fmt.Sprintf("%v", info.Name) +

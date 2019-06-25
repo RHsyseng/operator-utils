@@ -55,11 +55,13 @@ func (pv K8SBasedPlatformVersioner) GetPlatformInfo(client Discoverer, cfg *rest
 	var err error
 	client, cfg, err = pv.DefaultArgs(client, cfg)
 	if err != nil {
+		log.Info("issue occurred while defaulting client/cfg args")
 		return info, err
 	}
 
 	k8sVersion, err := client.ServerVersion()
 	if err != nil {
+		log.Info("issue occurred while fetching ServerVersion")
 		return info, err
 	}
 	info.K8SVersion = k8sVersion.Major + "." + k8sVersion.Minor
@@ -67,43 +69,19 @@ func (pv K8SBasedPlatformVersioner) GetPlatformInfo(client Discoverer, cfg *rest
 
 	apiList, err := client.ServerGroups()
 	if err != nil {
+		log.Info("issue occurred while fetching ServerGroups")
 		return info, err
 	}
 
 	for _, v := range apiList.Groups {
 		if v.Name == "route.openshift.io" {
 
-			info.Name = OpenShift
 			log.Info("route.openshift.io found in apis, platform is OpenShift")
-
-			doc, err := client.OpenAPISchema()
-			if err != nil {
-				return info, err
-			}
-
-			switch doc.Info.Version[:4] {
-			case "v3.1":
-				info.OCPVersion = doc.Info.Version
-
-			// OCP4 returns K8S major/minor from old API endpoint [bugzilla-1658957]
-			case "v1.1":
-				// sooo much interfacing for testing...
-				body, err := client.RESTClient().Get().AbsPath(ClusterVersionApiPath).Do().Raw()
-
-				if err != nil {
-					return info, err
-				}
-
-				var cvi PlatformClusterInfo
-				err = json.Unmarshal(body, &cvi)
-				if err != nil {
-					return info, err
-				}
-				info.OCPVersion = cvi.Status.Desired.Version
-			}
+			info.Name = OpenShift
+			info.ApproximateOpenShiftVersion()
+			break
 		}
 	}
-
 	log.Info(info.String())
 	return info, nil
 }
@@ -118,4 +96,60 @@ func DetectOpenShift(pv PlatformVersioner, cfg *rest.Config) (bool, error) {
 		return false, err
 	}
 	return info.IsOpenShift(), nil
+}
+
+/*
+OCP4.1+ requires elevated cluster configuration user security permissions for version fetch
+REST call URL requiring permissions: /apis/config.openshift.io/v1/clusterversions
+*/
+func (pv K8SBasedPlatformVersioner) LookupOpenShiftVersion(client Discoverer, cfg *rest.Config, info PlatformInfo) (PlatformInfo, error) {
+
+	// allow blank info param to still to be fully populated
+	if info.K8SVersion == "" {
+		var err error
+		info, err = pv.GetPlatformInfo(nil, nil)
+		if err != nil {
+			return info, err
+		}
+	}
+	if info.Name != OpenShift {
+		log.Info("OCP version fetch not valid for non-OCP platform", "PlatformInfo", info)
+		return info, nil
+	}
+	var err error
+	client, cfg, err = pv.DefaultArgs(client, cfg)
+	if err != nil {
+		log.Info("issue occurred while defaulting args for version lookup")
+		return info, err
+	}
+
+	doc, err := client.OpenAPISchema()
+	if err != nil {
+		log.Info("issue occurred while fetching OpenAPISchema")
+		return info, err
+	}
+
+	switch doc.Info.Version[:4] {
+	case "v3.1":
+		info.OCPVersion = doc.Info.Version
+
+	// OCP4 returns K8S major/minor from old API endpoint [bugzilla-1658957]
+	case "v1.1":
+		// sooo much interfacing for testing...
+		body, err := client.RESTClient().Get().AbsPath(ClusterVersionApiPath).Do().Raw()
+
+		if err != nil {
+			log.Info("issue occurred while making cluster version API call")
+			return info, err
+		}
+
+		var cvi PlatformClusterInfo
+		err = json.Unmarshal(body, &cvi)
+		if err != nil {
+			log.Info("issue occurred while unmarshalling PlatformClusterInfo")
+			return info, err
+		}
+		info.OCPVersion = cvi.Status.Desired.Version
+	}
+	return info, nil
 }

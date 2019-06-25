@@ -46,6 +46,56 @@ func TestK8SVersionHelpers(t *testing.T) {
 	}
 }
 
+func TestPlatformInfo_ApproximateOpenShiftVersion(t *testing.T) {
+
+	cases := []struct {
+		label              string
+		info               PlatformInfo
+		expectedOCPVersion string
+	}{
+		{
+			label:              "case 1",
+			info:               PlatformInfo{},
+			expectedOCPVersion: "",
+		},
+		{
+			label:              "case 2",
+			info:               PlatformInfo{Name: Kubernetes},
+			expectedOCPVersion: "",
+		},
+		{
+			label:              "case 3",
+			info:               PlatformInfo{Name: OpenShift, K8SVersion: "1.10+"},
+			expectedOCPVersion: "3.10",
+		},
+		{
+			label:              "case 4",
+			info:               PlatformInfo{Name: OpenShift, K8SVersion: "1.11+"},
+			expectedOCPVersion: "3.11",
+		},
+		{
+			label:              "case 5",
+			info:               PlatformInfo{Name: OpenShift, K8SVersion: "1.13+"},
+			expectedOCPVersion: "4.1",
+		},
+		{
+			label:              "case 6",
+			info:               PlatformInfo{Name: OpenShift, K8SVersion: "1.99"},
+			expectedOCPVersion: "",
+		},
+		{
+			label:              "case 7",
+			info:               PlatformInfo{Name: OpenShift},
+			expectedOCPVersion: "",
+		},
+	}
+
+	for _, v := range cases {
+		v.info.ApproximateOpenShiftVersion()
+		assert.Equal(t, v.expectedOCPVersion, v.info.OCPVersion, v.label+": expected OCP version to match")
+	}
+}
+
 func TestPlatformInfo_String(t *testing.T) {
 
 	info := PlatformInfo{Name: OpenShift, OCPVersion: "1.1.1+", K8SVersion: "456", OS: "foo/bar"}

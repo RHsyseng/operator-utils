@@ -169,12 +169,11 @@ func TestK8SBasedPlatformVersioner_GetPlatformInfo(t *testing.T) {
 			expectedErr:  false,
 		},
 		{
-			label: "case 4", // trigger error in OpenAPISchema, info should now be OCP with K8S major/minor
+			label: "case 4", // let K8S version start with "1.10+", info should now reflect OCP approximation
 			discoverer: FakeDiscoverer{
-				OpenAPISchemaError: fakeErr,
 				serverInfo: &version.Info{
 					Major: "1",
-					Minor: "2",
+					Minor: "10+",
 				},
 				groupList: &v1.APIGroupList{
 					TypeMeta: v1.TypeMeta{},
@@ -186,15 +185,15 @@ func TestK8SBasedPlatformVersioner_GetPlatformInfo(t *testing.T) {
 				},
 			},
 			config:       &rest.Config{},
-			expectedInfo: PlatformInfo{Name: OpenShift, K8SVersion: "1.2"},
-			expectedErr:  true,
+			expectedInfo: PlatformInfo{Name: OpenShift, K8SVersion: "1.10+", OCPVersion: "3.10"},
+			expectedErr:  false,
 		},
 		{
-			label: "case 5", // trigger no error, let OCP version start with "3.1", info should now reflect this
+			label: "case 5", // let K8S version start with "1.11+", info should now reflect OCP approximation
 			discoverer: FakeDiscoverer{
 				serverInfo: &version.Info{
 					Major: "1",
-					Minor: "2",
+					Minor: "11+",
 				},
 				groupList: &v1.APIGroupList{
 					TypeMeta: v1.TypeMeta{},
@@ -204,14 +203,29 @@ func TestK8SBasedPlatformVersioner_GetPlatformInfo(t *testing.T) {
 						},
 					},
 				},
-				doc: &openapi_v2.Document{
-					Info: &openapi_v2.Info{
-						Version: "v3.11.42",
+			},
+			config:       &rest.Config{},
+			expectedInfo: PlatformInfo{Name: OpenShift, K8SVersion: "1.11+", OCPVersion: "3.11"},
+			expectedErr:  false,
+		},
+		{
+			label: "case 6", // let K8S version start with "1.13+", info should now reflect OCP approximation
+			discoverer: FakeDiscoverer{
+				serverInfo: &version.Info{
+					Major: "1",
+					Minor: "13+",
+				},
+				groupList: &v1.APIGroupList{
+					TypeMeta: v1.TypeMeta{},
+					Groups: []v1.APIGroup{
+						{
+							Name: "route.openshift.io",
+						},
 					},
 				},
 			},
 			config:       &rest.Config{},
-			expectedInfo: PlatformInfo{Name: OpenShift, K8SVersion: "1.2", OCPVersion: "v3.11.42"},
+			expectedInfo: PlatformInfo{Name: OpenShift, K8SVersion: "1.13+", OCPVersion: "4.1"},
 			expectedErr:  false,
 		},
 	}
