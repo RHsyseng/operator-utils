@@ -41,7 +41,6 @@ func (info PlatformInfo) String() string {
 		", OS: " + info.OS + "]"
 }
 
-
 type OpenShiftVersion struct {
 	Version string `json:"ocpVersion"`
 }
