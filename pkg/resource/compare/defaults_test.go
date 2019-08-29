@@ -56,3 +56,12 @@ func TestCompareDeploymentConfigs(t *testing.T) {
 	assert.True(t, deepEquals(&dcs[0], &dcs[1]), "Expected resources to be deemed equal")
 	assert.True(t, equalDeploymentConfigs(&dcs[0], &dcs[1]), "Expected resources to be deemed equal based on DC comparator")
 }
+
+func TestCompareEmptyAnnotations(t *testing.T) {
+	routes := utils.GetRoutes(2)
+	routes[1].Name = routes[0].Name
+	routes[0].Annotations = make(map[string]string)
+	routes[0].Annotations["openshift.io/host.generated"] = "true"
+	routes[1].Annotations = nil
+	assert.True(t, equalRoutes(&routes[0], &routes[1]), "Routes should be considered equal")
+}

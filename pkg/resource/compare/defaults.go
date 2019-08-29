@@ -6,6 +6,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 )
 
@@ -150,6 +151,7 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 			}
 		}
 	}
+	ignoreEmptyMaps(dc1, dc2)
 
 	var pairs [][2]interface{}
 	pairs = append(pairs, [2]interface{}{dc1.Name, dc2.Name})
@@ -157,7 +159,11 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 	pairs = append(pairs, [2]interface{}{dc1.Labels, dc2.Labels})
 	pairs = append(pairs, [2]interface{}{dc1.Annotations, dc2.Annotations})
 	pairs = append(pairs, [2]interface{}{dc1.Spec, dc2.Spec})
-	return EqualPairs(pairs)
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
 }
 
 func equalServices(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
@@ -186,6 +192,7 @@ func equalServices(deployed resource.KubernetesResource, requested resource.Kube
 			}
 		}
 	}
+	ignoreEmptyMaps(service1, service2)
 
 	var pairs [][2]interface{}
 	pairs = append(pairs, [2]interface{}{service1.Name, service2.Name})
@@ -193,7 +200,11 @@ func equalServices(deployed resource.KubernetesResource, requested resource.Kube
 	pairs = append(pairs, [2]interface{}{service1.Labels, service2.Labels})
 	pairs = append(pairs, [2]interface{}{service1.Annotations, service2.Annotations})
 	pairs = append(pairs, [2]interface{}{service1.Spec, service2.Spec})
-	return EqualPairs(pairs)
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
 }
 
 func findServicePort(port corev1.ServicePort, ports []corev1.ServicePort) (bool, *corev1.ServicePort) {
@@ -227,6 +238,7 @@ func equalRoutes(deployed resource.KubernetesResource, requested resource.Kubern
 	if route2.Spec.WildcardPolicy == "" {
 		route1.Spec.WildcardPolicy = ""
 	}
+	ignoreEmptyMaps(route1, route2)
 
 	var pairs [][2]interface{}
 	pairs = append(pairs, [2]interface{}{route1.Name, route2.Name})
@@ -234,7 +246,11 @@ func equalRoutes(deployed resource.KubernetesResource, requested resource.Kubern
 	pairs = append(pairs, [2]interface{}{route1.Labels, route2.Labels})
 	pairs = append(pairs, [2]interface{}{route1.Annotations, route2.Annotations})
 	pairs = append(pairs, [2]interface{}{route1.Spec, route2.Spec})
-	return EqualPairs(pairs)
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
 }
 
 func equalRoles(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
@@ -246,7 +262,11 @@ func equalRoles(deployed resource.KubernetesResource, requested resource.Kuberne
 	pairs = append(pairs, [2]interface{}{role1.Labels, role2.Labels})
 	pairs = append(pairs, [2]interface{}{role1.Annotations, role2.Annotations})
 	pairs = append(pairs, [2]interface{}{role1.Rules, role2.Rules})
-	return EqualPairs(pairs)
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
 }
 
 func equalServiceAccounts(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
@@ -257,7 +277,11 @@ func equalServiceAccounts(deployed resource.KubernetesResource, requested resour
 	pairs = append(pairs, [2]interface{}{sa1.Namespace, sa2.Namespace})
 	pairs = append(pairs, [2]interface{}{sa1.Labels, sa2.Labels})
 	pairs = append(pairs, [2]interface{}{sa1.Annotations, sa2.Annotations})
-	return EqualPairs(pairs)
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
 }
 
 func equalRoleBindings(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
@@ -270,7 +294,11 @@ func equalRoleBindings(deployed resource.KubernetesResource, requested resource.
 	pairs = append(pairs, [2]interface{}{binding1.Annotations, binding2.Annotations})
 	pairs = append(pairs, [2]interface{}{binding1.Subjects, binding2.Subjects})
 	pairs = append(pairs, [2]interface{}{binding1.RoleRef.Name, binding2.RoleRef.Name})
-	return EqualPairs(pairs)
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
 }
 
 func equalSecrets(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
@@ -283,7 +311,11 @@ func equalSecrets(deployed resource.KubernetesResource, requested resource.Kuber
 	pairs = append(pairs, [2]interface{}{secret1.Annotations, secret2.Annotations})
 	pairs = append(pairs, [2]interface{}{secret1.Data, secret2.Data})
 	pairs = append(pairs, [2]interface{}{secret1.StringData, secret2.StringData})
-	return EqualPairs(pairs)
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
 }
 
 func deepEquals(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
@@ -312,4 +344,13 @@ func Equals(deployed interface{}, requested interface{}) bool {
 		logger.Info("Objects are not equal", "deployed", deployed, "requested", requested)
 	}
 	return equal
+}
+
+func ignoreEmptyMaps(deployed metav1.Object, requested metav1.Object) {
+	if requested.GetAnnotations() == nil && deployed.GetAnnotations() != nil && len(deployed.GetAnnotations()) == 0 {
+		deployed.SetAnnotations(nil)
+	}
+	if requested.GetLabels() == nil && deployed.GetLabels() != nil && len(deployed.GetLabels()) == 0 {
+		deployed.SetLabels(nil)
+	}
 }
