@@ -65,3 +65,78 @@ func TestCompareEmptyAnnotations(t *testing.T) {
 	routes[1].Annotations = nil
 	assert.True(t, equalRoutes(&routes[0], &routes[1]), "Routes should be considered equal")
 }
+
+func TestCompareDeploymentConfigLastTriggeredImage(t *testing.T) {
+	dcs := utils.GetDeploymentConfigs(2)
+	dcs[1].Name = dcs[0].Name
+	dcs[0].Spec.Triggers = []oappsv1.DeploymentTriggerPolicy{
+		{
+			ImageChangeParams: &oappsv1.DeploymentTriggerImageChangeParams{
+				Automatic:          false,
+				ContainerNames:     nil,
+				From:               corev1.ObjectReference{},
+				LastTriggeredImage: "some generated value",
+			},
+		},
+	}
+	dcs[1].Spec.Triggers = []oappsv1.DeploymentTriggerPolicy{
+		{
+			ImageChangeParams: &oappsv1.DeploymentTriggerImageChangeParams{
+				Automatic:      false,
+				ContainerNames: nil,
+				From:           corev1.ObjectReference{},
+			},
+		},
+	}
+	assert.True(t, equalDeploymentConfigs(&dcs[0], &dcs[1]), "Expected resources to be deemed equal based on DC comparator")
+}
+
+func TestCompareDeploymentConfigImageChange(t *testing.T) {
+	dcs := utils.GetDeploymentConfigs(2)
+	dcs[1].Name = dcs[0].Name
+	dcs[0].Spec.Triggers = []oappsv1.DeploymentTriggerPolicy{
+		{
+			ImageChangeParams: &oappsv1.DeploymentTriggerImageChangeParams{
+				Automatic: false,
+				ContainerNames: []string{
+					"container1",
+					"container2",
+				},
+				From: corev1.ObjectReference{
+					Kind:      "ImageStreamTag",
+					Namespace: "namespace",
+					Name:      "image",
+				},
+			},
+		},
+	}
+	dcs[0].Spec.Template.Spec.Containers = []corev1.Container{
+		{
+			Name:"container1",
+			Image:"some generated value",
+		},
+	}
+	dcs[1].Spec.Triggers = []oappsv1.DeploymentTriggerPolicy{
+		{
+			ImageChangeParams: &oappsv1.DeploymentTriggerImageChangeParams{
+				Automatic: false,
+				ContainerNames: []string{
+					"container1",
+					"container2",
+				},
+				From: corev1.ObjectReference{
+					Kind:      "ImageStreamTag",
+					Namespace: "namespace",
+					Name:      "image",
+				},
+			},
+		},
+	}
+	dcs[1].Spec.Template.Spec.Containers = []corev1.Container{
+		{
+			Name:"container1",
+			Image:"image",
+		},
+	}
+	assert.True(t, equalDeploymentConfigs(&dcs[0], &dcs[1]), "Expected resources to be deemed equal based on DC comparator")
+}

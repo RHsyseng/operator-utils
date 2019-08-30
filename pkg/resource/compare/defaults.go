@@ -61,6 +61,7 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 
 	//Removed generated fields from deployed version, when not specified in requested item
 	dc1 = dc1.DeepCopy()
+	triggerBasedImage := make(map[string]bool)
 	if dc2.Spec.Strategy.RecreateParams == nil {
 		dc1.Spec.Strategy.RecreateParams = nil
 	}
@@ -80,6 +81,19 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 	}
 	if dc2.Spec.RevisionHistoryLimit == nil {
 		dc1.Spec.RevisionHistoryLimit = nil
+	}
+	for i := range dc1.Spec.Triggers {
+		if len(dc2.Spec.Triggers) <= i {
+			return false
+		}
+		if dc1.Spec.Triggers[i].ImageChangeParams != nil && dc2.Spec.Triggers[i].ImageChangeParams != nil {
+			if dc2.Spec.Triggers[i].ImageChangeParams.LastTriggeredImage == "" {
+				dc1.Spec.Triggers[i].ImageChangeParams.LastTriggeredImage = ""
+			}
+			for _, containerName := range dc2.Spec.Triggers[i].ImageChangeParams.ContainerNames {
+				triggerBasedImage[containerName] = true
+			}
+		}
 	}
 	if dc1.Spec.Template != nil && dc2.Spec.Template != nil {
 		for i := range dc1.Spec.Template.Spec.Volumes {
@@ -107,48 +121,10 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 		if dc2.Spec.Template.Spec.SchedulerName == "" {
 			dc1.Spec.Template.Spec.SchedulerName = ""
 		}
-		for i := range dc1.Spec.Template.Spec.Containers {
-			if len(dc2.Spec.Template.Spec.Containers) <= i {
-				return false
-			}
-			probe1 := dc1.Spec.Template.Spec.Containers[i].LivenessProbe
-			probe2 := dc2.Spec.Template.Spec.Containers[i].LivenessProbe
-			if probe1 != nil && probe2 != nil {
-				if probe2.FailureThreshold == 0 {
-					probe1.FailureThreshold = probe2.FailureThreshold
-				}
-				if probe2.SuccessThreshold == 0 {
-					probe1.SuccessThreshold = probe2.SuccessThreshold
-				}
-			}
-			probe1 = dc1.Spec.Template.Spec.Containers[i].ReadinessProbe
-			probe2 = dc2.Spec.Template.Spec.Containers[i].ReadinessProbe
-			if probe1 != nil && probe2 != nil {
-				if probe2.FailureThreshold == 0 {
-					probe1.FailureThreshold = probe2.FailureThreshold
-				}
-				if probe2.SuccessThreshold == 0 {
-					probe1.SuccessThreshold = probe2.SuccessThreshold
-				}
-			}
-			if dc2.Spec.Template.Spec.Containers[i].TerminationMessagePath == "" {
-				dc1.Spec.Template.Spec.Containers[i].TerminationMessagePath = ""
-			}
-			if dc2.Spec.Template.Spec.Containers[i].TerminationMessagePolicy == "" {
-				dc1.Spec.Template.Spec.Containers[i].TerminationMessagePolicy = ""
-			}
-			for j := range dc1.Spec.Template.Spec.Containers[i].Env {
-				if len(dc2.Spec.Template.Spec.Containers[i].Env) <= j {
-					return false
-				}
-				valueFrom := dc2.Spec.Template.Spec.Containers[i].Env[j].ValueFrom
-				if valueFrom != nil && valueFrom.FieldRef != nil && valueFrom.FieldRef.APIVersion == "" {
-					valueFrom1 := dc1.Spec.Template.Spec.Containers[i].Env[j].ValueFrom
-					if valueFrom1 != nil && valueFrom1.FieldRef != nil {
-						valueFrom1.FieldRef.APIVersion = ""
-					}
-				}
-			}
+		ignoreGenerateContainerValues(dc1.Spec.Template.Spec.Containers, dc2.Spec.Template.Spec.Containers, triggerBasedImage)
+		ignoreGenerateContainerValues(dc1.Spec.Template.Spec.InitContainers, dc2.Spec.Template.Spec.InitContainers, triggerBasedImage)
+		if dc2.Spec.Template.Spec.TerminationGracePeriodSeconds == nil {
+			dc1.Spec.Template.Spec.TerminationGracePeriodSeconds = nil
 		}
 	}
 	ignoreEmptyMaps(dc1, dc2)
@@ -164,6 +140,63 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
 	}
 	return equal
+}
+
+func ignoreGenerateContainerValues(containers1 []corev1.Container, containers2 []corev1.Container, triggerBasedImage map[string]bool) {
+	for i := range containers1 {
+		if len(containers2) <= i {
+			return
+		}
+		probe1 := containers1[i].LivenessProbe
+		probe2 := containers2[i].LivenessProbe
+		if probe1 != nil && probe2 != nil {
+			if probe2.FailureThreshold == 0 {
+				probe1.FailureThreshold = probe2.FailureThreshold
+			}
+			if probe2.SuccessThreshold == 0 {
+				probe1.SuccessThreshold = probe2.SuccessThreshold
+			}
+			if probe2.PeriodSeconds == 0 {
+				probe1.PeriodSeconds = probe2.PeriodSeconds
+			}
+		}
+		probe1 = containers1[i].ReadinessProbe
+		probe2 = containers2[i].ReadinessProbe
+		if probe1 != nil && probe2 != nil {
+			if probe2.FailureThreshold == 0 {
+				probe1.FailureThreshold = probe2.FailureThreshold
+			}
+			if probe2.SuccessThreshold == 0 {
+				probe1.SuccessThreshold = probe2.SuccessThreshold
+			}
+			if probe2.PeriodSeconds == 0 {
+				probe1.PeriodSeconds = probe2.PeriodSeconds
+			}
+		}
+		if containers2[i].TerminationMessagePath == "" {
+			containers1[i].TerminationMessagePath = ""
+		}
+		if containers2[i].TerminationMessagePolicy == "" {
+			containers1[i].TerminationMessagePolicy = ""
+		}
+		for j := range containers1[i].Env {
+			if len(containers2[i].Env) <= j {
+				return
+			}
+			valueFrom := containers2[i].Env[j].ValueFrom
+			if valueFrom != nil && valueFrom.FieldRef != nil && valueFrom.FieldRef.APIVersion == "" {
+				valueFrom1 := containers1[i].Env[j].ValueFrom
+				if valueFrom1 != nil && valueFrom1.FieldRef != nil {
+					valueFrom1.FieldRef.APIVersion = ""
+				}
+			}
+		}
+		if triggerBasedImage[containers1[i].Name] {
+			//Image is being derived from the ImageChange trigger, so this image field is auto-generated after deployment
+			containers1[i].Image = containers2[i].Image
+		}
+	}
+
 }
 
 func equalServices(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {

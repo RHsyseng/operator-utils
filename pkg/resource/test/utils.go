@@ -42,7 +42,9 @@ func GetDeploymentConfigs(count int) []oappsv1.DeploymentConfig {
 		dc := oappsv1.DeploymentConfig{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{},
-			Spec:       oappsv1.DeploymentConfigSpec{},
+			Spec: oappsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{},
+			},
 			Status: oappsv1.DeploymentConfigStatus{
 				ReadyReplicas: 0,
 			},
