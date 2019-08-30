@@ -3,6 +3,7 @@ package compare
 import (
 	utils "github.com/RHsyseng/operator-utils/pkg/resource/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	obuildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -112,8 +113,8 @@ func TestCompareDeploymentConfigImageChange(t *testing.T) {
 	}
 	dcs[0].Spec.Template.Spec.Containers = []corev1.Container{
 		{
-			Name:"container1",
-			Image:"some generated value",
+			Name:  "container1",
+			Image: "some generated value",
 		},
 	}
 	dcs[1].Spec.Triggers = []oappsv1.DeploymentTriggerPolicy{
@@ -134,9 +135,32 @@ func TestCompareDeploymentConfigImageChange(t *testing.T) {
 	}
 	dcs[1].Spec.Template.Spec.Containers = []corev1.Container{
 		{
-			Name:"container1",
-			Image:"image",
+			Name:  "container1",
+			Image: "image",
 		},
 	}
 	assert.True(t, equalDeploymentConfigs(&dcs[0], &dcs[1]), "Expected resources to be deemed equal based on DC comparator")
+}
+
+func TestCompareBuildConfigWebHooks(t *testing.T) {
+	bcs := utils.GetBuildConfigs(2)
+	bcs[1].Name = bcs[0].Name
+	bcs[0].Spec.RunPolicy = obuildv1.BuildRunPolicySerial
+	bcs[0].Spec.Triggers = []obuildv1.BuildTriggerPolicy{
+		{
+			GitLabWebHook: &obuildv1.WebHookTrigger{
+				AllowEnv:        false,
+				SecretReference: &obuildv1.SecretLocalReference{Name: "dafsaf"},
+			},
+		},
+	}
+	bcs[1].Spec.Triggers = []obuildv1.BuildTriggerPolicy{
+		{
+			GitLabWebHook: &obuildv1.WebHookTrigger{
+				AllowEnv:        false,
+				SecretReference: &obuildv1.SecretLocalReference{Name: "eqwrer"},
+			},
+		},
+	}
+	assert.True(t, equalBuildConfigs(&bcs[0], &bcs[1]), "Expected resources to be deemed equal based on BC comparator")
 }

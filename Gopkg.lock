@@ -257,10 +257,11 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:cc18cf101cc07b176fcf6d04137d267afbd9b88c9c3dbe0dde3ddae072992a6e"
+  digest = "1:cd1052701c9640c2d3d594ab729243a2a03315a970586c060861b28f98922909"
   name = "github.com/openshift/api"
   packages = [
     "apps/v1",
+    "build/v1",
     "route/v1",
   ]
   pruneopts = "UT"
@@ -627,6 +628,7 @@
     "github.com/go-openapi/validate",
     "github.com/googleapis/gnostic/OpenAPIv2",
     "github.com/openshift/api/apps/v1",
+    "github.com/openshift/api/build/v1",
     "github.com/openshift/api/route/v1",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/assert",

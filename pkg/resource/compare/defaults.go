@@ -3,6 +3,7 @@ package compare
 import (
 	"github.com/RHsyseng/operator-utils/pkg/resource"
 	oappsv1 "github.com/openshift/api/apps/v1"
+	buildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -52,6 +53,7 @@ func defaultMap() map[reflect.Type]func(deployed resource.KubernetesResource, re
 	equalsMap[reflect.TypeOf(rbacv1.RoleBinding{})] = equalRoleBindings
 	equalsMap[reflect.TypeOf(corev1.ServiceAccount{})] = equalServiceAccounts
 	equalsMap[reflect.TypeOf(corev1.Secret{})] = equalSecrets
+	equalsMap[reflect.TypeOf(buildv1.BuildConfig{})] = equalBuildConfigs
 	return equalsMap
 }
 
@@ -77,6 +79,9 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 		}
 		if dc2.Spec.Strategy.RollingParams.TimeoutSeconds == nil {
 			dc1.Spec.Strategy.RollingParams.TimeoutSeconds = nil
+		}
+		if dc2.Spec.Strategy.RollingParams.MaxUnavailable == nil {
+			dc1.Spec.Strategy.RollingParams.MaxUnavailable = nil
 		}
 	}
 	if dc2.Spec.RevisionHistoryLimit == nil {
@@ -112,6 +117,7 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 		if dc2.Spec.Template.Spec.DNSPolicy == "" {
 			dc1.Spec.Template.Spec.DNSPolicy = ""
 		}
+		//noinspection GoDeprecation
 		if dc2.Spec.Template.Spec.DeprecatedServiceAccount == "" {
 			dc1.Spec.Template.Spec.DeprecatedServiceAccount = ""
 		}
@@ -147,30 +153,24 @@ func ignoreGenerateContainerValues(containers1 []corev1.Container, containers2 [
 		if len(containers2) <= i {
 			return
 		}
-		probe1 := containers1[i].LivenessProbe
-		probe2 := containers2[i].LivenessProbe
-		if probe1 != nil && probe2 != nil {
-			if probe2.FailureThreshold == 0 {
-				probe1.FailureThreshold = probe2.FailureThreshold
-			}
-			if probe2.SuccessThreshold == 0 {
-				probe1.SuccessThreshold = probe2.SuccessThreshold
-			}
-			if probe2.PeriodSeconds == 0 {
-				probe1.PeriodSeconds = probe2.PeriodSeconds
-			}
-		}
-		probe1 = containers1[i].ReadinessProbe
-		probe2 = containers2[i].ReadinessProbe
-		if probe1 != nil && probe2 != nil {
-			if probe2.FailureThreshold == 0 {
-				probe1.FailureThreshold = probe2.FailureThreshold
-			}
-			if probe2.SuccessThreshold == 0 {
-				probe1.SuccessThreshold = probe2.SuccessThreshold
-			}
-			if probe2.PeriodSeconds == 0 {
-				probe1.PeriodSeconds = probe2.PeriodSeconds
+		probes1 := []*corev1.Probe{containers1[i].LivenessProbe, containers1[i].ReadinessProbe}
+		probes2 := []*corev1.Probe{containers2[i].LivenessProbe, containers2[i].ReadinessProbe}
+		for index := range probes1 {
+			probe1 := probes1[index]
+			probe2 := probes2[index]
+			if probe1 != nil && probe2 != nil {
+				if probe2.FailureThreshold == 0 {
+					probe1.FailureThreshold = probe2.FailureThreshold
+				}
+				if probe2.SuccessThreshold == 0 {
+					probe1.SuccessThreshold = probe2.SuccessThreshold
+				}
+				if probe2.PeriodSeconds == 0 {
+					probe1.PeriodSeconds = probe2.PeriodSeconds
+				}
+				if probe2.TimeoutSeconds == 0 {
+					probe1.TimeoutSeconds = probe2.TimeoutSeconds
+				}
 			}
 		}
 		if containers2[i].TerminationMessagePath == "" {
@@ -344,6 +344,64 @@ func equalSecrets(deployed resource.KubernetesResource, requested resource.Kuber
 	pairs = append(pairs, [2]interface{}{secret1.Annotations, secret2.Annotations})
 	pairs = append(pairs, [2]interface{}{secret1.Data, secret2.Data})
 	pairs = append(pairs, [2]interface{}{secret1.StringData, secret2.StringData})
+	equal := EqualPairs(pairs)
+	if !equal {
+		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
+	}
+	return equal
+}
+
+func equalBuildConfigs(deployed resource.KubernetesResource, requested resource.KubernetesResource) bool {
+	bc1 := deployed.(*buildv1.BuildConfig)
+	bc2 := requested.(*buildv1.BuildConfig)
+
+	//Removed generated fields from deployed version, when not specified in requested item
+	bc1 = bc1.DeepCopy()
+	bc2 = bc2.DeepCopy()
+	if bc2.Spec.RunPolicy == "" {
+		bc1.Spec.RunPolicy = ""
+	}
+	for i := range bc1.Spec.Triggers {
+		if len(bc1.Spec.Triggers) <= i {
+			return false
+		}
+		trigger1 := bc1.Spec.Triggers[i]
+		trigger2 := bc2.Spec.Triggers[i]
+		webHooks1 := []*buildv1.WebHookTrigger{trigger1.BitbucketWebHook, trigger1.GenericWebHook, trigger1.GitHubWebHook, trigger1.GitLabWebHook}
+		webHooks2 := []*buildv1.WebHookTrigger{trigger2.BitbucketWebHook, trigger2.GenericWebHook, trigger2.GitHubWebHook, trigger2.GitLabWebHook}
+		for index := range webHooks1 {
+			if webHooks1[index] != nil && webHooks2[index] != nil {
+				//noinspection GoDeprecation
+				if webHooks1[index].Secret != "" && webHooks2[index].Secret != "" {
+					webHooks1[index].Secret = ""
+					webHooks2[index].Secret = ""
+				}
+				if webHooks1[index].SecretReference != nil && webHooks2[index].SecretReference != nil {
+					webHooks1[index].SecretReference = nil
+					webHooks2[index].SecretReference = nil
+				}
+			}
+		}
+		if trigger2.ImageChange != nil && trigger1.ImageChange != nil {
+			if trigger2.ImageChange.LastTriggeredImageID == "" {
+				trigger1.ImageChange.LastTriggeredImageID = ""
+			}
+		}
+	}
+	if bc2.Spec.SuccessfulBuildsHistoryLimit == nil {
+		bc1.Spec.SuccessfulBuildsHistoryLimit = nil
+	}
+	if bc2.Spec.FailedBuildsHistoryLimit == nil {
+		bc1.Spec.FailedBuildsHistoryLimit = nil
+	}
+	ignoreEmptyMaps(bc1, bc2)
+
+	var pairs [][2]interface{}
+	pairs = append(pairs, [2]interface{}{bc1.Name, bc2.Name})
+	pairs = append(pairs, [2]interface{}{bc1.Namespace, bc2.Namespace})
+	pairs = append(pairs, [2]interface{}{bc1.Labels, bc2.Labels})
+	pairs = append(pairs, [2]interface{}{bc1.Annotations, bc2.Annotations})
+	pairs = append(pairs, [2]interface{}{bc1.Spec, bc2.Spec})
 	equal := EqualPairs(pairs)
 	if !equal {
 		logger.Info("Resources are not equal", "deployed", deployed, "requested", requested)
