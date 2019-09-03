@@ -87,8 +87,16 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 	if dc2.Spec.RevisionHistoryLimit == nil {
 		dc1.Spec.RevisionHistoryLimit = nil
 	}
+	if len(dc1.Spec.Triggers) == 1 && len(dc2.Spec.Triggers) == 0 {
+		defaultTrigger := oappsv1.DeploymentTriggerPolicy{Type:oappsv1.DeploymentTriggerOnConfigChange}
+		if dc1.Spec.Triggers[0] == defaultTrigger {
+			//Remove default generated trigger
+			dc1.Spec.Triggers = nil
+		}
+	}
 	for i := range dc1.Spec.Triggers {
 		if len(dc2.Spec.Triggers) <= i {
+			logger.Info("No matching trigger found in requested DC", "deployed.DC.trigger", dc1.Spec.Triggers[i])
 			return false
 		}
 		if dc1.Spec.Triggers[i].ImageChangeParams != nil && dc2.Spec.Triggers[i].ImageChangeParams != nil {
@@ -103,6 +111,7 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 	if dc1.Spec.Template != nil && dc2.Spec.Template != nil {
 		for i := range dc1.Spec.Template.Spec.Volumes {
 			if len(dc2.Spec.Template.Spec.Volumes) <= i {
+				logger.Info("No matching volume found in requested DC", "deployed.DC.volume", dc1.Spec.Template.Spec.Volumes[i])
 				return false
 			}
 			volSrc1 := dc1.Spec.Template.Spec.Volumes[i].VolumeSource
