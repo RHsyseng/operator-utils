@@ -70,6 +70,11 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 	if dc2.Spec.Strategy.ActiveDeadlineSeconds == nil {
 		dc1.Spec.Strategy.ActiveDeadlineSeconds = nil
 	}
+	if dc2.Spec.Strategy.RollingParams == nil && dc2.Spec.Strategy.Type == "" && dc1.Spec.Strategy.Type == oappsv1.DeploymentStrategyTypeRolling {
+		//This looks like a default generated strategy that should be ignored
+		dc1.Spec.Strategy.Type = ""
+		dc1.Spec.Strategy.RollingParams = nil
+	}
 	if dc1.Spec.Strategy.RollingParams != nil && dc2.Spec.Strategy.RollingParams != nil {
 		if dc2.Spec.Strategy.RollingParams.UpdatePeriodSeconds == nil {
 			dc1.Spec.Strategy.RollingParams.UpdatePeriodSeconds = nil
@@ -83,12 +88,15 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 		if dc2.Spec.Strategy.RollingParams.MaxUnavailable == nil {
 			dc1.Spec.Strategy.RollingParams.MaxUnavailable = nil
 		}
+		if dc2.Spec.Strategy.RollingParams.MaxSurge == nil {
+			dc1.Spec.Strategy.RollingParams.MaxSurge = nil
+		}
 	}
 	if dc2.Spec.RevisionHistoryLimit == nil {
 		dc1.Spec.RevisionHistoryLimit = nil
 	}
 	if len(dc1.Spec.Triggers) == 1 && len(dc2.Spec.Triggers) == 0 {
-		defaultTrigger := oappsv1.DeploymentTriggerPolicy{Type:oappsv1.DeploymentTriggerOnConfigChange}
+		defaultTrigger := oappsv1.DeploymentTriggerPolicy{Type: oappsv1.DeploymentTriggerOnConfigChange}
 		if dc1.Spec.Triggers[0] == defaultTrigger {
 			//Remove default generated trigger
 			dc1.Spec.Triggers = nil
@@ -160,7 +168,11 @@ func equalDeploymentConfigs(deployed resource.KubernetesResource, requested reso
 func ignoreGenerateContainerValues(containers1 []corev1.Container, containers2 []corev1.Container, triggerBasedImage map[string]bool) {
 	for i := range containers1 {
 		if len(containers2) <= i {
+			logger.Info("No matching container found in requested resource", "deployed container", containers1[i])
 			return
+		}
+		if containers2[i].ImagePullPolicy == "" && containers1[i].ImagePullPolicy == corev1.PullAlways {
+			containers1[i].ImagePullPolicy = ""
 		}
 		probes1 := []*corev1.Probe{containers1[i].LivenessProbe, containers1[i].ReadinessProbe}
 		probes2 := []*corev1.Probe{containers2[i].LivenessProbe, containers2[i].ReadinessProbe}
