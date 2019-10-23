@@ -26,12 +26,34 @@
   version = "v9"
 
 [[projects]]
+  digest = "1:f6944c59395c37a8c6fc9f65ba4e64dce4bf0eb9e459ed1ceb51d18a88efbc35"
+  name = "github.com/coreos/prometheus-operator"
+  packages = [
+    "pkg/apis/monitoring",
+    "pkg/apis/monitoring/v1",
+  ]
+  pruneopts = "UT"
+  revision = "908ee0372a9ac2c6574d589fdc56a4f3cb5f12d1"
+  version = "v0.33.0"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "UT"
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
   version = "v1.1.1"
+
+[[projects]]
+  digest = "1:01d38d940d55f5e5fc41b5cfd2f204209222225c989d0f5876036cf869196d25"
+  name = "github.com/emicklei/go-restful"
+  packages = [
+    ".",
+    "log",
+  ]
+  pruneopts = "UT"
+  revision = "5d8b667fa26d374ff451368b5040d3adbb9c7db4"
+  version = "v2.11.0"
 
 [[projects]]
   digest = "1:ac425d784b13d49b37a5bbed3ce022677f8f3073b216f05d6adcb9303e27fa0f"
@@ -550,9 +572,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:22abb5d4204ab1a0dcc9cda64906a31c43965ff5159e8b9f766c9d2a162dbed5"
+  digest = "1:4c2cbfb5ec9dc5612f8fb1c32343304efe5388c11367361b95b95c00653843c9"
   name = "k8s.io/kube-openapi"
-  packages = ["pkg/util/proto"]
+  packages = [
+    "pkg/common",
+    "pkg/util/proto",
+  ]
   pruneopts = "UT"
   revision = "0270cf2f1c1d995d34b36019a6f65d58e6e33ad4"
 
@@ -593,6 +618,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1",
     "github.com/ghodss/yaml",
     "github.com/go-openapi/spec",
     "github.com/go-openapi/strfmt",
