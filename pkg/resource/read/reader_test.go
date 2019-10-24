@@ -3,6 +3,7 @@ package read
 import (
 	"context"
 	"fmt"
+	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +19,8 @@ func TestListObjects(t *testing.T) {
 	scheme := runtime.NewScheme()
 	err := corev1.SchemeBuilder.AddToScheme(scheme)
 	assert.Nil(t, err, "Expect no errors building scheme")
+	err = monv1.SchemeBuilder.AddToScheme(scheme)
+	assert.Nil(t, err, "Expect no errors building scheme")
 	client := fake.NewFakeClientWithScheme(scheme)
 	services := getServices(2)
 	for index := range services {
@@ -27,11 +30,15 @@ func TestListObjects(t *testing.T) {
 	for index := range pods {
 		assert.Nil(t, client.Create(context.TODO(), &pods[index]), "Expect no errors mock creating objects")
 	}
+	serviceMonitors := getServiceMonitors(2)
+	for index := range serviceMonitors {
+		assert.Nil(t, client.Create(context.TODO(), &serviceMonitors[index]), "Expect no errors mock creating objects")
+	}
 
 	reader := New(client).WithNamespace(namespace)
-	objectMap, err := reader.ListAll(&corev1.ServiceList{}, &corev1.PodList{})
+	objectMap, err := reader.ListAll(&corev1.ServiceList{}, &corev1.PodList{}, &monv1.ServiceMonitorList{})
 	assert.Nil(t, err, "Expect no errors listing objects")
-	assert.Len(t, objectMap, 2, "Expect two object types found")
+	assert.Len(t, objectMap, 3, "Expect two object types found")
 
 	listedServices := objectMap[reflect.TypeOf(corev1.Service{})]
 	assert.Len(t, listedServices, 2, "Expect to find 2 services")
@@ -45,6 +52,12 @@ func TestListObjects(t *testing.T) {
 	assert.Equal(t, &expectedPods[0], listedPods[0])
 	assert.Equal(t, &expectedPods[1], listedPods[1])
 	assert.Equal(t, &expectedPods[2], listedPods[2])
+
+	listedServiceMonitors := objectMap[reflect.TypeOf(monv1.ServiceMonitor{})]
+	assert.Len(t, listedServiceMonitors, 2, "Expect to find 2 servicemonitors")
+	expectedServiceMonitors := getServiceMonitors(2)
+	assert.Equal(t, &expectedServiceMonitors[0], listedServiceMonitors[0])
+	assert.Equal(t, &expectedServiceMonitors[1], listedServiceMonitors[1])
 }
 
 func TestLoadObject(t *testing.T) {
@@ -84,4 +97,17 @@ func getPods(count int) []corev1.Pod {
 		}
 	}
 	return pods
+}
+
+func getServiceMonitors(count int) []monv1.ServiceMonitor {
+	servicemonitors := make([]monv1.ServiceMonitor, count)
+	for index := range servicemonitors {
+		servicemonitors[index] = monv1.ServiceMonitor{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      fmt.Sprintf("servicemonitor-%d", index+1),
+				Namespace: namespace,
+			},
+		}
+	}
+	return servicemonitors
 }
