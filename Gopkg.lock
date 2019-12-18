@@ -588,10 +588,11 @@
   version = "kubernetes-1.13.1"
 
 [[projects]]
-  digest = "1:c859e94e84f47a74e98f61fe55ae164f10c38d32d87b6fd44b071664c8eceabc"
+  digest = "1:72ac015c3eff0c02a84a62b6cad29a8c826a73d14c2423d8fc8782c7169f5ba4"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
+    "discovery/fake",
     "dynamic",
     "kubernetes/scheme",
     "pkg/apis/clientauthentication",
@@ -686,7 +687,9 @@
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
+    "k8s.io/client-go/discovery/fake",
     "k8s.io/client-go/rest",
+    "k8s.io/client-go/testing",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/client/fake",
