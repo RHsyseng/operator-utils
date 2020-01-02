@@ -5,6 +5,7 @@ import (
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -62,6 +63,25 @@ func GetBuildConfigs(count int) []buildv1.BuildConfig {
 		bc := buildv1.BuildConfig{}
 		bc.Name = fmt.Sprintf("%s%d", "bc", (i + 1))
 		slice = append(slice, bc)
+	}
+	return slice
+}
+
+func GetDeployments(count int) []appsv1.Deployment {
+	var slice []appsv1.Deployment
+	for i := 0; i < count; i++ {
+		dc := appsv1.Deployment{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{},
+			},
+			Status: appsv1.DeploymentStatus{
+				ReadyReplicas: 0,
+			},
+		}
+		dc.Name = fmt.Sprintf("%s%d", "deployment", i+1)
+		slice = append(slice, dc)
 	}
 	return slice
 }
