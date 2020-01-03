@@ -1,11 +1,13 @@
 package compare
 
 import (
+	"fmt"
 	utils "github.com/RHsyseng/operator-utils/pkg/resource/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	obuildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"reflect"
 	"testing"
@@ -163,4 +165,43 @@ func TestCompareBuildConfigWebHooks(t *testing.T) {
 		},
 	}
 	assert.True(t, equalBuildConfigs(&bcs[0], &bcs[1]), "Expected resources to be deemed equal based on BC comparator")
+}
+
+func TestCompareDeployments(t *testing.T) {
+	deployments := utils.GetDeployments(2)
+	deployments[1].Name = deployments[0].Name
+	deployments[1].Status = appsv1.DeploymentStatus{
+		ReadyReplicas: 1,
+	}
+
+	assert.False(t, reflect.DeepEqual(deployments[0], deployments[1]), "Inconsequential differences between two Deployments should make equality test fail")
+	assert.True(t, deepEquals(&deployments[0], &deployments[1]), "Expected resources to be deemed equal")
+	assert.True(t, equalDeployment(&deployments[0], &deployments[1]), "Expected resources to be deemed equal based on Deployment comparator")
+}
+
+func TestCompareDeploymentLastTriggeredImage(t *testing.T) {
+	imageTriggersFormat := "[{\"from\":{\"kind\":\"ImageStreamTag\",\"name\":\"%s\"},\"fieldPath\":\"spec.template.spec.containers[?(@.name==\\\"%s\\\")].image\"}]"
+	deployments := utils.GetDeployments(2)
+	deployments[1].Name = deployments[0].Name
+	deployments[0].Annotations = map[string]string{
+		imageTriggersAnnotation: fmt.Sprintf(imageTriggersFormat, "my-image", "my-container"),
+	}
+	deployments[1].Annotations = map[string]string{
+		imageTriggersAnnotation: fmt.Sprintf(imageTriggersFormat, "my-image", "my-container"),
+	}
+	deployments[0].Spec.Template.Spec.Containers = []corev1.Container{
+		{Name: "my-container", Image: "some generated value"},
+	}
+	deployments[1].Spec.Template.Spec.Containers = []corev1.Container{
+		{Name: "my-container", Image: "quay.io/namespace/image:tag"},
+	}
+	assert.True(t, equalDeployment(&deployments[0], &deployments[1]), "Expected resources to be deemed equal based on deployment comparator")
+}
+
+func TestCompareDeploymentGenerateValue(t *testing.T) {
+	deployments := utils.GetDeployments(2)
+	deployments[1].Name = deployments[0].Name
+	deployments[0].Spec.Template.Spec.DNSPolicy = corev1.DNSClusterFirst
+
+	assert.True(t, equalDeployment(&deployments[0], &deployments[1]), "Expected resources to be deemed equal based on deployment comparator")
 }
