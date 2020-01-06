@@ -85,3 +85,18 @@ func GetDeployments(count int) []appsv1.Deployment {
 	}
 	return slice
 }
+
+func GetSecrets(count int) []corev1.Secret {
+	var slice []corev1.Secret
+	for i := 0; i < count; i++ {
+		secret := corev1.Secret{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{},
+			Data:       map[string][]byte{},
+			StringData: map[string]string{},
+		}
+		secret.Name = fmt.Sprintf("%s%d", "secret", (i + 1))
+		slice = append(slice, secret)
+	}
+	return slice
+}
