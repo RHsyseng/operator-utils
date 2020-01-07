@@ -1,7 +1,8 @@
 package detector
 
 import (
-	runtime "k8s.io/apimachinery/pkg/runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
 	"time"
 )
@@ -59,9 +60,13 @@ func (d *Detector) Stop() {
 }
 
 func (d *Detector) autoDetectCapabilities() {
+	apiLists, err := d.dc.ServerResources()
+	if err != nil {
+		return
+	}
 	for crd, trigger := range d.crds {
 		crdGVK := crd.GetObjectKind().GroupVersionKind()
-		resourceExists, _ := d.resourceExists(d.dc, crdGVK.GroupVersion().String(), crdGVK.Kind)
+		resourceExists, _ := d.resourceExists(apiLists, crdGVK.GroupVersion().String(), crdGVK.Kind)
 		if resourceExists {
 			stateManager := GetStateManager()
 			if stateManager.GetState(crdGVK.Kind) != true {
@@ -72,13 +77,7 @@ func (d *Detector) autoDetectCapabilities() {
 	}
 }
 
-//copied from operator-sdk to avoid pulling in thousands of files in imports
-//https://github.com/operator-framework/operator-sdk/blob/92d78a2c25f0edbe039c4906a88fbb38c022018c/pkg/k8sutil/k8sutil.go#L93-L108
-func (d *Detector) resourceExists(dc discovery.DiscoveryInterface, apiGroupVersion, kind string) (bool, error) {
-	apiLists, err := dc.ServerResources()
-	if err != nil {
-		return false, err
-	}
+func (d *Detector) resourceExists(apiLists []*metav1.APIResourceList, apiGroupVersion, kind string) (bool, error) {
 	for _, apiList := range apiLists {
 		if apiList.GroupVersion == apiGroupVersion {
 			for _, r := range apiList.APIResources {

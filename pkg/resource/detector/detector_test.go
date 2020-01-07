@@ -50,7 +50,7 @@ func TestDetectorDetects(t *testing.T) {
 	}
 
 	time.Sleep(2 * time.Millisecond)
-	if ! crdDiscovered {
+	if !crdDiscovered {
 		t.Fatalf("CRD not discovered correctly")
 	}
 }
