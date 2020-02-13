@@ -205,3 +205,86 @@ func TestCompareDeploymentGenerateValue(t *testing.T) {
 
 	assert.True(t, equalDeployment(&deployments[0], &deployments[1]), "Expected resources to be deemed equal based on deployment comparator")
 }
+
+func TestCompareSecrets(t *testing.T) {
+	secrets := utils.GetSecrets(3)
+	secrets[1].Name = secrets[0].Name
+	secrets[2].Name = secrets[0].Name
+	secrets[0].Data["password"] = []byte{'M', 'n', 'L', 'W', 'o', 'p', '3', 'P', '7', '5', 'y', 'w', 'X', 'j', 'e', 't'}
+	secrets[0].Data["username"] = []byte{'d', 'e', 'v', 'e', 'l', 'o', 'p', 'e', 'r'}
+	secrets[1].StringData["password"] = "MnLWop3P75ywXjet"
+	secrets[1].StringData["username"] = "developer"
+	secrets[2].Data["password"] = []byte{'M', 'n', 'L', 'W', 'o', 'p', '3', 'P', '7', '5', 'y', 'w', 'X', 'j', 'X', 'Y', 'e', 't'}
+	secrets[2].Data["username"] = []byte{'d', 'e', 'v', 'o', 'p', 's'}
+	secrets[2].StringData["password"] = "MnLWop3P75ywXjet"
+	secrets[2].StringData["username"] = "developer"
+
+	assert.False(t, reflect.DeepEqual(secrets[0], secrets[1]), "Inconsequential differences between two Secrets should make equality test fail")
+	assert.True(t, equalSecrets(&secrets[0], &secrets[1]), "Expected resources to be deemed equal based on Secret comparator")
+	assert.False(t, reflect.DeepEqual(secrets[0], secrets[2]), "Inconsequential differences between two Secrets should make equality test fail")
+	assert.True(t, equalSecrets(&secrets[0], &secrets[2]), "Expected resources to be deemed equal based on Secret comparator")
+}
+
+func Test_mergeSecretStringDataToData(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  *corev1.Secret
+		want *corev1.Secret
+	}{
+		{
+			"NoStringData",
+			&corev1.Secret{
+				Data: map[string][]byte{
+					"test": {'d', 'e', 'v', 'e', 'l', 'o', 'p', 'e', 'r'},
+				},
+			},
+			&corev1.Secret{
+				Data: map[string][]byte{
+					"test": {'d', 'e', 'v', 'e', 'l', 'o', 'p', 'e', 'r'},
+				},
+			},
+		},
+		{
+			"WithStringData",
+			&corev1.Secret{
+				StringData: map[string]string{
+					"test": "developer",
+				},
+			},
+			&corev1.Secret{
+				Data: map[string][]byte{
+					"test": {'d', 'e', 'v', 'e', 'l', 'o', 'p', 'e', 'r'},
+				},
+				StringData: map[string]string{
+					"test": "developer",
+				},
+			},
+		},
+		{
+			"StringDataOverwrite",
+			&corev1.Secret{
+				Data: map[string][]byte{
+					"test": {'"', 'Z', 'G', 'V', '2', 'Z', 'W', 'x', 'v', 'c', 'G', 'V', 'X', 'y', 'd', '"'},
+				},
+				StringData: map[string]string{
+					"test": "developer",
+				},
+			},
+			&corev1.Secret{
+				Data: map[string][]byte{
+					"test": {'d', 'e', 'v', 'e', 'l', 'o', 'p', 'e', 'r'},
+				},
+				StringData: map[string]string{
+					"test": "developer",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := mergeSecretStringDataToData(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("mergeSecretStringDataToData() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
