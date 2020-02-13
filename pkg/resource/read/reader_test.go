@@ -77,9 +77,14 @@ func getServices(count int) []corev1.Service {
 	services := make([]corev1.Service, count)
 	for index := range services {
 		services[index] = corev1.Service{
+			TypeMeta: v1.TypeMeta{
+				Kind:       "Service",
+				APIVersion: "v1",
+			},
 			ObjectMeta: v1.ObjectMeta{
-				Name:      fmt.Sprintf("service-%d", index+1),
-				Namespace: namespace,
+				Name:            fmt.Sprintf("service-%d", index+1),
+				Namespace:       namespace,
+				ResourceVersion: "1",
 			},
 		}
 	}
@@ -91,8 +96,9 @@ func getPods(count int) []corev1.Pod {
 	for index := range pods {
 		pods[index] = corev1.Pod{
 			ObjectMeta: v1.ObjectMeta{
-				Name:      fmt.Sprintf("pod-%d", index+1),
-				Namespace: namespace,
+				Name:            fmt.Sprintf("pod-%d", index+1),
+				Namespace:       namespace,
+				ResourceVersion: "1",
 			},
 		}
 	}
@@ -104,8 +110,9 @@ func getServiceMonitors(count int) []monv1.ServiceMonitor {
 	for index := range servicemonitors {
 		servicemonitors[index] = monv1.ServiceMonitor{
 			ObjectMeta: v1.ObjectMeta{
-				Name:      fmt.Sprintf("servicemonitor-%d", index+1),
-				Namespace: namespace,
+				Name:            fmt.Sprintf("servicemonitor-%d", index+1),
+				Namespace:       namespace,
+				ResourceVersion: "1",
 			},
 		}
 	}
