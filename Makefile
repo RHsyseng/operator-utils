@@ -1,12 +1,12 @@
 .PHONY: all
 all: test
 
-.PHONY: dep
-dep:
-	dep ensure -v
+.PHONY: mod
+mod:
+	go mod tidy && go mod vendor
 
 .PHONY: format
-format: dep
+format: mod
 	go fmt ./...
 
 .PHONY: vet
