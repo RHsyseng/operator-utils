@@ -2,14 +2,4 @@ language: go
 go_import_path: github.com/RHsyseng/operator-utils
 
 go:
-  - 1.10.x
-  - 1.11.x
-  - 1.12.x
   - 1.13.x
-
-env:
-  - DEP_RELEASE_TAG="v0.5.1"
-
-before_install:
-  # Setup dependency management tool
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
