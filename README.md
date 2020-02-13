@@ -5,6 +5,34 @@
 
 This library layers on top of the Operator SDK, having set of utilities function as a library to easily create Kubernetes operators.
 
+## Kubernetes / OpenShift Version Support
+The operator-utils project aims to support the 2 most recent OpenShift minor versions:
+
+- [master](https://github.com/RHsyseng/operator-utils/tree/master) branch currently supports K8S 1.13 / OCP 4.2
+- For K8S 1.14 support, please refer to [k8s-1.14](https://github.com/RHsyseng/operator-utils/tree/k8s-1.14) branch
+- For K8S 1.16 / OpenShift 4.3 support, please refer to [k8s1.16_ocp4.3](https://github.com/RHsyseng/operator-utils/tree/k8s1.16_ocp4.3) branch
+
+
+## Declaring operator-utils dependency
+
+
+Regardless of dependency framework, we suggest following the best practice of declaring any and all dependencies your project utilizes regardless of target branch, tag, or revision. 
+
+With regards to operator-utils, please **carefully** consider the given version support information above when declaring your dependency, as depending on or defaulting to master branch will likely result in future build complications as our project continues to evolve and cycle minor version support.   
+
+- Dep example specifying **REVISION**:
+```
+[[constraint]]
+  name = "github.com/RHsyseng/operator-utils"
+  revision = "232650febd728455482b3c780c79a9ac0be62b50"
+```
+
+- Go.mod example specifying **REVISION**:
+```
+github.com/RHsyseng/operator-utils v0.0.0-20200108204558-82090ef57586
+```
+
+
 ## Features
 
 1. [managing CR and CRD validation](#managing-cr-and-crd-validation)
@@ -183,9 +211,22 @@ A full example is provided [here](./internal/platform/platform_versioner_test.go
 
 ## Who is using this Library
 
-This operator util is used by Red Hat Middleware Products Operators some of them list here:  
+operator-utils is used by several Red Hat product & community operators, including the following:  
 
-- [Kie Cloud Operator](https://github.com/kiegroup/kie-cloud-operator)
+- [3scale APIcast Operator](https://github.com/3scale/apicast-operator)
+- [3scale Operator](https://github.com/3scale/3scale-operator)
 - [ActiveMQ Artemis Operator](https://github.com/rh-messaging/activemq-artemis-operator)
-- [3scale-operator](https://github.com/3scale/3scale-operator)
-- [Interconnect-operator](https://github.com/interconnectedcloud/qdr-operator)
+- [AtlasMap Operator](https://github.com/atlasmap/atlasmap-operator)
+- [Kie Cloud Operator](https://github.com/kiegroup/kie-cloud-operator)
+- [Kogito Operator](https://github.com/kiegroup/kogito-cloud-operator)
+- [KubeVirt Containerized Data Importer](https://github.com/kubevirt/containerized-data-importer)
+- [OCS Meta Operator](https://github.com/openshift/ocs-operator)
+- [QDR Interconnect Operator](https://github.com/interconnectedcloud/qdr-operator)
+- [Integreatly Operator](https://github.com/integr8ly/integreatly-operator)
+- [Serverless Orchestration](https://github.com/RHsyseng/serverless-orchestration)
+- [ShipShape Testing Operator](https://github.com/rh-messaging/shipshape)
+- [Teiid Operator](https://github.com/teiid/teiid-operator)
+- [Wildfly Operator](https://github.com/wildfly/wildfly-operator)
+
+## Contributing
+All bugs, tasks, fixes or enhancements should be tracked as [GitHub Issues](https://github.com/RHsyseng/operator-utils/issues) & [Pull Requests](https://github.com/RHsyseng/operator-utils/pulls).
