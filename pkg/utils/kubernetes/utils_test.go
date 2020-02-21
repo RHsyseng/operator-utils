@@ -80,7 +80,7 @@ func TestFinalizerManager_RegisterFinalizer(t *testing.T) {
 			assert.Len(t, pod.GetFinalizers(), len(c.expected), c.name)
 			for _, e := range c.expected {
 				assert.Contains(t, pod.GetFinalizers(), e, c.name)
-				assert.Nil(t, mgr.objects[pod.GetUID()].finalizers[e](), c.name)
+				assert.Nil(t, mgr.objects[pod.GetUID()][e](), c.name)
 			}
 			assert.True(t, hasUpdated, c.name)
 		}
@@ -125,7 +125,7 @@ func TestFinalizerManager_RegisterFinalizer_UpdateFails(t *testing.T) {
 	err := mgr.RegisterFinalizer(pod, expected, func() error { return nil })
 
 	assert.NotNil(t, err)
-	assert.NotContains(t, mgr.objects[pod.GetUID()].finalizers, expected)
+	assert.NotContains(t, mgr.objects[pod.GetUID()], expected)
 }
 
 func TestFinalizerManager_UnregisterFinalizer(t *testing.T) {
@@ -176,11 +176,11 @@ func TestFinalizerManager_UnregisterFinalizer(t *testing.T) {
 		}
 		client := test.NewMockClient()
 		mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
-			pod.GetUID(): {object: pod, finalizers: map[string]OnFinalize{
+			pod.GetUID(): {
 				"finalizer1": defaultFn,
 				"finalizer2": defaultFn,
 				"finalizer3": defaultFn,
-			}},
+			},
 		}}
 		hasUpdated := false
 		client.WhenUpdate(pod, func() error {
@@ -198,7 +198,7 @@ func TestFinalizerManager_UnregisterFinalizer(t *testing.T) {
 			assert.Len(t, pod.GetFinalizers(), len(c.expected), c.name)
 			for _, e := range c.expected {
 				assert.Contains(t, pod.GetFinalizers(), e, c.name)
-				assert.Nil(t, mgr.objects[pod.GetUID()].finalizers[e](), c.name)
+				assert.Nil(t, mgr.objects[pod.GetUID()][e](), c.name)
 			}
 			assert.True(t, hasUpdated, c.name)
 		}
@@ -215,11 +215,11 @@ func TestFinalizerManager_UnregisterFinalizer_UpdateFails(t *testing.T) {
 	}
 	client := test.NewMockClient()
 	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
-		pod.GetUID(): {object: pod, finalizers: map[string]OnFinalize{
+		pod.GetUID(): {
 			"finalizer1": defaultFn,
 			"finalizer2": defaultFn,
 			"finalizer3": defaultFn,
-		}},
+		},
 	}}
 
 	client.WhenUpdate(pod, func() error {
@@ -230,7 +230,7 @@ func TestFinalizerManager_UnregisterFinalizer_UpdateFails(t *testing.T) {
 	err := mgr.UnregisterFinalizer(pod, expected)
 
 	assert.NotNil(t, err)
-	assert.Len(t, mgr.objects[pod.GetUID()].finalizers, 3)
+	assert.Len(t, mgr.objects[pod.GetUID()], 3)
 }
 
 func TestFinalizerManager_Finalize(t *testing.T) {
@@ -249,11 +249,11 @@ func TestFinalizerManager_Finalize(t *testing.T) {
 	}
 	client := test.NewMockClient()
 	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
-		pod.GetUID(): {object: pod, finalizers: map[string]OnFinalize{
+		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
 			"finalizer3": onFinalize,
-		}},
+		},
 	}}
 	updated := 0
 	client.WhenUpdate(pod, func() error {
@@ -261,12 +261,12 @@ func TestFinalizerManager_Finalize(t *testing.T) {
 		return nil
 	})
 
-	err := mgr.Finalize(pod)
+	err := mgr.FinalizeOnDelete(pod)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 3, count)
 	assert.Equal(t, 3, updated)
-	assert.Empty(t, mgr.objects[pod.GetUID()].finalizers)
+	assert.Empty(t, mgr.objects[pod.GetUID()])
 }
 
 func TestFinalizerManager_Finalize_NotFinalizing(t *testing.T) {
@@ -284,11 +284,11 @@ func TestFinalizerManager_Finalize_NotFinalizing(t *testing.T) {
 	}
 	client := test.NewMockClient()
 	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
-		pod.GetUID(): {object: pod, finalizers: map[string]OnFinalize{
+		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
 			"finalizer3": onFinalize,
-		}},
+		},
 	}}
 	updated := 0
 	client.WhenUpdate(pod, func() error {
@@ -296,12 +296,12 @@ func TestFinalizerManager_Finalize_NotFinalizing(t *testing.T) {
 		return nil
 	})
 
-	err := mgr.Finalize(pod)
+	err := mgr.FinalizeOnDelete(pod)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 0, count)
 	assert.Equal(t, 0, updated)
-	assert.NotEmpty(t, mgr.objects[pod.GetUID()].finalizers)
+	assert.NotEmpty(t, mgr.objects[pod.GetUID()])
 }
 
 func TestFinalizerManager_Finalize_UpdatingErrors(t *testing.T) {
@@ -323,11 +323,11 @@ func TestFinalizerManager_Finalize_UpdatingErrors(t *testing.T) {
 	}
 	client := test.NewMockClient()
 	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
-		pod.GetUID(): {object: pod, finalizers: map[string]OnFinalize{
+		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
 			"finalizer3": onFinalize,
-		}},
+		},
 	}}
 	updated := 0
 	client.WhenUpdate(pod, func() error {
@@ -335,12 +335,12 @@ func TestFinalizerManager_Finalize_UpdatingErrors(t *testing.T) {
 		return nil
 	})
 
-	err := mgr.Finalize(pod)
+	err := mgr.FinalizeOnDelete(pod)
 
 	assert.Error(t, err)
 	assert.Equal(t, 1, count)
 	assert.Equal(t, 1, updated)
-	assert.Len(t, mgr.objects[pod.GetUID()].finalizers, 2)
+	assert.Len(t, mgr.objects[pod.GetUID()], 2)
 }
 
 func TestFinalizerManager_Finalize_FinalizerErrors(t *testing.T) {
@@ -359,11 +359,11 @@ func TestFinalizerManager_Finalize_FinalizerErrors(t *testing.T) {
 	}
 	client := test.NewMockClient()
 	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
-		pod.GetUID(): {object: pod, finalizers: map[string]OnFinalize{
+		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
 			"finalizer3": onFinalize,
-		}},
+		},
 	}}
 	updated := 0
 	client.WhenUpdate(pod, func() error {
@@ -374,10 +374,10 @@ func TestFinalizerManager_Finalize_FinalizerErrors(t *testing.T) {
 		return nil
 	})
 
-	err := mgr.Finalize(pod)
+	err := mgr.FinalizeOnDelete(pod)
 
 	assert.Error(t, err)
 	assert.Equal(t, 2, count)
 	assert.Equal(t, 1, updated)
-	assert.Len(t, mgr.objects[pod.GetUID()].finalizers, 2)
+	assert.Len(t, mgr.objects[pod.GetUID()], 2)
 }

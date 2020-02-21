@@ -3,10 +3,9 @@ package kubernetes
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -16,10 +15,7 @@ import (
 //OnFinalize Callback function to be executed when an object is being deleted
 type OnFinalize func() error
 
-type ObjectFinalizer struct {
-	object     runtime.Object
-	finalizers map[string]OnFinalize
-}
+type ObjectFinalizer map[string]OnFinalize
 
 type FinalizerManager struct {
 	objects map[types.UID]ObjectFinalizer
@@ -34,7 +30,7 @@ func NewFinalizerManager(client client.Client) FinalizerManager {
 }
 
 //RegisterFinalizer registers a finalizer function to be executed when the object is marked to be deleted.
-func (mgr *FinalizerManager) RegisterFinalizer(owner metav1.Object, name string, onFinalize OnFinalize) error {
+func (mgr *FinalizerManager) RegisterFinalizer(owner resource.KubernetesResource, name string, onFinalize OnFinalize) error {
 	if mgr.IsFinalizing(owner) {
 		return nil
 	}
@@ -43,48 +39,43 @@ func (mgr *FinalizerManager) RegisterFinalizer(owner metav1.Object, name string,
 		return err
 	}
 	controllerutil.AddFinalizer(owner, name)
-	obj, err := toRuntimeObj(owner)
 	if err != nil {
 		return err
 	}
-	err = mgr.Client.Update(context.TODO(), obj)
+	err = mgr.Client.Update(context.TODO(), owner)
 	if err != nil {
 		return err
 	}
 	_, ok := mgr.objects[owner.GetUID()]
 	if !ok {
-		mgr.objects[owner.GetUID()] = ObjectFinalizer{
-			object:     obj,
-			finalizers: map[string]OnFinalize{},
-		}
+		mgr.objects[owner.GetUID()] = map[string]OnFinalize{}
 	}
-	mgr.objects[owner.GetUID()].finalizers[name] = onFinalize
+	mgr.objects[owner.GetUID()][name] = onFinalize
 	return nil
 }
 
 //UnregisterFinalizer removes a finalizer and updates the owner object
-func (mgr *FinalizerManager) UnregisterFinalizer(owner metav1.Object, name string) error {
+func (mgr *FinalizerManager) UnregisterFinalizer(owner resource.KubernetesResource, name string) error {
 	err := validateFinalizerName(name)
 	if err != nil {
 		return err
 	}
 	obj, err := meta.Accessor(owner)
 	controllerutil.RemoveFinalizer(obj, name)
-	objFinalizer := mgr.objects[obj.GetUID()]
-	err = mgr.Client.Update(context.TODO(), objFinalizer.object)
+	err = mgr.Client.Update(context.TODO(), owner)
 	if err != nil {
 		return err
 	}
-	delete(mgr.objects[obj.GetUID()].finalizers, name)
+	delete(mgr.objects[obj.GetUID()], name)
 	return nil
 }
 
-//Finalize triggers all the finalizers registered for the given object
-func (mgr *FinalizerManager) Finalize(owner metav1.Object) error {
+//FinalizeOnDelete triggers all the finalizers registered for the given object in case the owner is being deleted
+func (mgr *FinalizerManager) FinalizeOnDelete(owner resource.KubernetesResource) error {
 	if !mgr.IsFinalizing(owner) {
 		return nil
 	}
-	for n, f := range mgr.objects[owner.GetUID()].finalizers {
+	for n, f := range mgr.objects[owner.GetUID()] {
 		err := f()
 		if err != nil {
 			return err
@@ -100,15 +91,6 @@ func (mgr *FinalizerManager) Finalize(owner metav1.Object) error {
 //IsFinalizing An object is considered to be finalizing when its deletionTimestamp is not null
 func (mgr *FinalizerManager) IsFinalizing(owner metav1.Object) bool {
 	return owner.GetDeletionTimestamp() != nil
-}
-
-func toRuntimeObj(obj interface{}) (runtime.Object, error) {
-	switch t := obj.(type) {
-	case runtime.Object:
-		return t, nil
-	default:
-		return nil, fmt.Errorf("object does not implement the runtime.Object interface")
-	}
 }
 
 func validateFinalizer(name string, onFinalize OnFinalize) error {
