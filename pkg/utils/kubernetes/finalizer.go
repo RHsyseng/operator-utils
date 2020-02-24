@@ -7,7 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strings"
 )
@@ -19,13 +18,13 @@ type ObjectFinalizer map[string]OnFinalize
 
 type FinalizerManager struct {
 	objects map[types.UID]ObjectFinalizer
-	Client  client.Client
+	PlatformService
 }
 
-func NewFinalizerManager(client client.Client) FinalizerManager {
+func NewFinalizerManager(service PlatformService) FinalizerManager {
 	return FinalizerManager{
 		objects: map[types.UID]ObjectFinalizer{},
-		Client:  client,
+		PlatformService: service,
 	}
 }
 
@@ -42,7 +41,7 @@ func (mgr *FinalizerManager) RegisterFinalizer(owner resource.KubernetesResource
 	if err != nil {
 		return err
 	}
-	err = mgr.Client.Update(context.TODO(), owner)
+	err = mgr.Update(context.TODO(), owner)
 	if err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func (mgr *FinalizerManager) UnregisterFinalizer(owner resource.KubernetesResour
 	}
 	obj, err := meta.Accessor(owner)
 	controllerutil.RemoveFinalizer(obj, name)
-	err = mgr.Client.Update(context.TODO(), owner)
+	err = mgr.Update(context.TODO(), owner)
 	if err != nil {
 		return err
 	}

@@ -1,12 +1,15 @@
 package kubernetes
 
 import (
+	"context"
 	"errors"
 	"github.com/RHsyseng/operator-utils/pkg/test"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 )
 
@@ -62,13 +65,14 @@ func TestFinalizerManager_RegisterFinalizer(t *testing.T) {
 				UID:  types.UID("134"),
 			},
 		}
-		client := test.NewMockClient()
-		mgr := NewFinalizerManager(&client)
+		mockPlatformSvc := BuildMockPlatformService()
+		mockPlatformSvc.Create(context.TODO(), pod)
+		mgr := NewFinalizerManager(mockPlatformSvc)
 		hasUpdated := false
-		client.WhenUpdate(pod, func() error {
+		mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 			hasUpdated = true
-			return nil
-		})
+			return mockPlatformSvc.Client.Update(ctx, obj, opts...)
+		}
 		var err error
 		for i, f := range c.finalizers {
 			err = mgr.RegisterFinalizer(pod, f, c.functions[i])
@@ -88,8 +92,8 @@ func TestFinalizerManager_RegisterFinalizer(t *testing.T) {
 }
 
 func TestFinalizerManager_RegisterFinalizer_IsFinalizing(t *testing.T) {
-	client := test.NewMockClient()
-	mgr := NewFinalizerManager(&client)
+	mockPlatformSvc := BuildMockPlatformService()
+	mgr := NewFinalizerManager(mockPlatformSvc)
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "example",
@@ -97,9 +101,10 @@ func TestFinalizerManager_RegisterFinalizer_IsFinalizing(t *testing.T) {
 			DeletionTimestamp: &metav1.Time{},
 		},
 	}
-	client.WhenUpdate(pod, func() error {
+	mockPlatformSvc.Create(context.TODO(), pod)
+	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		return errors.New("Should not be updated")
-	})
+	}
 	expected := "finalizer.example.com"
 
 	err := mgr.RegisterFinalizer(pod, expected, func() error { return nil })
@@ -109,17 +114,18 @@ func TestFinalizerManager_RegisterFinalizer_IsFinalizing(t *testing.T) {
 }
 
 func TestFinalizerManager_RegisterFinalizer_UpdateFails(t *testing.T) {
-	client := test.NewMockClient()
-	mgr := NewFinalizerManager(&client)
+	mockPlatformSvc := BuildMockPlatformService()
+	mgr := NewFinalizerManager(mockPlatformSvc)
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "example",
 			UID:  types.UID("134"),
 		},
 	}
-	client.WhenUpdate(pod, func() error {
+	mockPlatformSvc.Create(context.TODO(), pod)
+	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		return errors.New("Some error")
-	})
+	}
 	expected := "finalizer.example.com"
 
 	err := mgr.RegisterFinalizer(pod, expected, func() error { return nil })
@@ -174,8 +180,9 @@ func TestFinalizerManager_UnregisterFinalizer(t *testing.T) {
 				Finalizers: []string{"finalizer1", "finalizer2", "finalizer3"},
 			},
 		}
-		client := test.NewMockClient()
-		mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
+		mockPlatformSvc := BuildMockPlatformService()
+		mockPlatformSvc.Create(context.TODO(), pod)
+		mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 			pod.GetUID(): {
 				"finalizer1": defaultFn,
 				"finalizer2": defaultFn,
@@ -183,10 +190,10 @@ func TestFinalizerManager_UnregisterFinalizer(t *testing.T) {
 			},
 		}}
 		hasUpdated := false
-		client.WhenUpdate(pod, func() error {
+		mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 			hasUpdated = true
-			return nil
-		})
+			return mockPlatformSvc.Client.Update(ctx, obj, opts...)
+		}
 		var err error
 		for _, f := range c.finalizers {
 			err = mgr.UnregisterFinalizer(pod, f)
@@ -213,8 +220,9 @@ func TestFinalizerManager_UnregisterFinalizer_UpdateFails(t *testing.T) {
 			Finalizers: []string{"finalizer1", "finalizer2", "finalizer3"},
 		},
 	}
-	client := test.NewMockClient()
-	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
+	mockPlatformSvc := BuildMockPlatformService()
+	mockPlatformSvc.Create(context.TODO(), pod)
+	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
 			"finalizer1": defaultFn,
 			"finalizer2": defaultFn,
@@ -222,9 +230,9 @@ func TestFinalizerManager_UnregisterFinalizer_UpdateFails(t *testing.T) {
 		},
 	}}
 
-	client.WhenUpdate(pod, func() error {
+	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		return errors.New("Some error")
-	})
+	}
 
 	expected := "finalizer1"
 	err := mgr.UnregisterFinalizer(pod, expected)
@@ -233,7 +241,7 @@ func TestFinalizerManager_UnregisterFinalizer_UpdateFails(t *testing.T) {
 	assert.Len(t, mgr.objects[pod.GetUID()], 3)
 }
 
-func TestFinalizerManager_Finalize(t *testing.T) {
+func TestFinalizerManager_FinalizeOnDelete(t *testing.T) {
 	count := 0
 	onFinalize := func() error {
 		count++
@@ -247,8 +255,9 @@ func TestFinalizerManager_Finalize(t *testing.T) {
 			DeletionTimestamp: &metav1.Time{},
 		},
 	}
-	client := test.NewMockClient()
-	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
+	mockPlatformSvc := BuildMockPlatformService()
+	mockPlatformSvc.Create(context.TODO(), pod)
+	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
@@ -256,10 +265,10 @@ func TestFinalizerManager_Finalize(t *testing.T) {
 		},
 	}}
 	updated := 0
-	client.WhenUpdate(pod, func() error {
+	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		updated++
-		return nil
-	})
+		return mockPlatformSvc.Client.Update(ctx, obj, opts...)
+	}
 
 	err := mgr.FinalizeOnDelete(pod)
 
@@ -269,7 +278,7 @@ func TestFinalizerManager_Finalize(t *testing.T) {
 	assert.Empty(t, mgr.objects[pod.GetUID()])
 }
 
-func TestFinalizerManager_Finalize_NotFinalizing(t *testing.T) {
+func TestFinalizerManager_FinalizeOnDelete_NotFinalizing(t *testing.T) {
 	count := 0
 	onFinalize := func() error {
 		count++
@@ -282,19 +291,20 @@ func TestFinalizerManager_Finalize_NotFinalizing(t *testing.T) {
 			Finalizers: []string{"finalizer1", "finalizer2", "finalizer3"},
 		},
 	}
-	client := test.NewMockClient()
-	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
+	mockPlatformSvc := BuildMockPlatformService()
+	mockPlatformSvc.Create(context.TODO(), pod)
+	updated := 0
+	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
+		updated++
+		return mockPlatformSvc.Client.Update(ctx, obj, opts...)
+	}
+	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
 			"finalizer3": onFinalize,
 		},
 	}}
-	updated := 0
-	client.WhenUpdate(pod, func() error {
-		updated++
-		return nil
-	})
 
 	err := mgr.FinalizeOnDelete(pod)
 
@@ -304,7 +314,7 @@ func TestFinalizerManager_Finalize_NotFinalizing(t *testing.T) {
 	assert.NotEmpty(t, mgr.objects[pod.GetUID()])
 }
 
-func TestFinalizerManager_Finalize_UpdatingErrors(t *testing.T) {
+func TestFinalizerManager_FinalizeOnDelete_UpdatingErrors(t *testing.T) {
 	count := 0
 	onFinalize := func() error {
 		if count == 1 {
@@ -321,8 +331,9 @@ func TestFinalizerManager_Finalize_UpdatingErrors(t *testing.T) {
 			DeletionTimestamp: &metav1.Time{},
 		},
 	}
-	client := test.NewMockClient()
-	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
+	mockPlatformSvc := BuildMockPlatformService()
+	mockPlatformSvc.Create(context.TODO(), pod)
+	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
@@ -330,10 +341,10 @@ func TestFinalizerManager_Finalize_UpdatingErrors(t *testing.T) {
 		},
 	}}
 	updated := 0
-	client.WhenUpdate(pod, func() error {
+	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		updated++
-		return nil
-	})
+		return mockPlatformSvc.Client.Update(ctx, obj, opts...)
+	}
 
 	err := mgr.FinalizeOnDelete(pod)
 
@@ -343,7 +354,7 @@ func TestFinalizerManager_Finalize_UpdatingErrors(t *testing.T) {
 	assert.Len(t, mgr.objects[pod.GetUID()], 2)
 }
 
-func TestFinalizerManager_Finalize_FinalizerErrors(t *testing.T) {
+func TestFinalizerManager_FinalizeOnDelete_FinalizerErrors(t *testing.T) {
 	count := 0
 	onFinalize := func() error {
 		count++
@@ -357,8 +368,9 @@ func TestFinalizerManager_Finalize_FinalizerErrors(t *testing.T) {
 			DeletionTimestamp: &metav1.Time{},
 		},
 	}
-	client := test.NewMockClient()
-	mgr := FinalizerManager{Client: &client, objects: map[types.UID]ObjectFinalizer{
+	mockPlatformSvc := BuildMockPlatformService()
+	mockPlatformSvc.Create(context.TODO(), pod)
+	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
 			"finalizer1": onFinalize,
 			"finalizer2": onFinalize,
@@ -366,13 +378,13 @@ func TestFinalizerManager_Finalize_FinalizerErrors(t *testing.T) {
 		},
 	}}
 	updated := 0
-	client.WhenUpdate(pod, func() error {
+	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		if updated == 1 {
 			return errors.New("Some error")
 		}
 		updated++
-		return nil
-	})
+		return mockPlatformSvc.Client.Update(ctx, obj, opts...)
+	}
 
 	err := mgr.FinalizeOnDelete(pod)
 
@@ -380,4 +392,8 @@ func TestFinalizerManager_Finalize_FinalizerErrors(t *testing.T) {
 	assert.Equal(t, 2, count)
 	assert.Equal(t, 1, updated)
 	assert.Len(t, mgr.objects[pod.GetUID()], 2)
+}
+
+func BuildMockPlatformService() *test.MockPlatformService {
+	return test.NewMockPlatformServiceBuilder(v1.SchemeBuilder).Build()
 }

@@ -34,15 +34,15 @@
   version = "v10"
 
 [[projects]]
-  digest = "1:d02f4d5f910baa85e22443524c34bf5056c7792811cc37e217536079877ec25f"
+  digest = "1:2a3bd11bcca3a9f261030069917f4fe95056d66f7c2f9525217f294ce0522622"
   name = "github.com/coreos/prometheus-operator"
   packages = [
     "pkg/apis/monitoring",
     "pkg/apis/monitoring/v1",
   ]
   pruneopts = "UT"
-  revision = "6c792f79913eaf0057e111a0a3b08f8d26a0372d"
-  version = "v0.35.1"
+  revision = "89f35ef22db0dc24c523bf8be473bcbcf9ac81f6"
+  version = "v0.36.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -237,7 +237,7 @@
   version = "v1.1.9"
 
 [[projects]]
-  digest = "1:927762c6729b4e72957ba3310e485ed09cf8451c5a637a52fd016a9fe09e7936"
+  digest = "1:7bbccd3dd7998f2a180264ec1d12e362ed8e02f55ea7b82ac0d0f48ffa2d8888"
   name = "github.com/mailru/easyjson"
   packages = [
     "buffer",
@@ -245,8 +245,8 @@
     "jwriter",
   ]
   pruneopts = "UT"
-  revision = "1b2b06f5f209fea48ff5922d8bfb2b9ed5d8f00b"
-  version = "v0.7.0"
+  revision = "8edcc4e51f39ddbd3505a3386aff3f435a7fd028"
+  version = "v0.7.1"
 
 [[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
@@ -274,15 +274,30 @@
 
 [[projects]]
   branch = "release-4.3"
-  digest = "1:4ca613395387d56b5bb11e563d698bf86abdb1b29fb6600836c1e7e0e9d1342c"
+  digest = "1:df34d48420a979e2f2f75e3d8986b9abf8127ad967c2f75ba7e2d6afcfab894a"
   name = "github.com/openshift/api"
   packages = [
     "apps/v1",
     "build/v1",
+    "console/v1",
+    "image/docker10",
+    "image/dockerpre012",
+    "image/v1",
     "route/v1",
   ]
   pruneopts = "UT"
   revision = "e9d93e317dd13b6f135baca5cee888d5ff3c222b"
+
+[[projects]]
+  branch = "release-4.3"
+  digest = "1:550808916a6d37a6262f401c3e1096a083045053f61ea072be7368fcd05a65e7"
+  name = "github.com/openshift/client-go"
+  packages = [
+    "image/clientset/versioned/scheme",
+    "image/clientset/versioned/typed/image/v1",
+  ]
+  pruneopts = "UT"
+  revision = "f6563a70e19a12b2f240eaf4e716ef75baf7003e"
 
 [[projects]]
   digest = "1:9e1d37b58d17113ec3cb5608ac0382313c5b59470b94ed97d0976e69c7022314"
@@ -309,12 +324,12 @@
   version = "v1.0.5"
 
 [[projects]]
-  digest = "1:8548c309c65a85933a625be5e7d52b6ac927ca30c56869fae58123b8a77a75e1"
+  digest = "1:5e8f46b412421d2d6cceea845d28ac46f3f5a5f60a6e86f0ee75e24fd43a02a9"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   pruneopts = "UT"
-  revision = "221dbe5ed46703ee255b1da0dec05086f5035f62"
-  version = "v1.4.0"
+  revision = "3ebf1ddaeb260c4b1ae502a01c7844fa8c1fa0e9"
+  version = "v1.5.1"
 
 [[projects]]
   digest = "1:3f2695e75ed6dfa1187df6baf40a81d8dd47589e6fbfc4ccb748bceb3af8836c"
@@ -357,7 +372,7 @@
   revision = "2cfd321de3ee5d5f8a5fda2521d1703478334d98"
 
 [[projects]]
-  digest = "1:260048b6193e304ee294452a9e3410c474e3ce187248c7e2e4a2631207386f74"
+  digest = "1:7cf33d98a2a8d4ddb940ee365e1d93c334de32813767cf2e78bfb2774f6d78ec"
   name = "go.uber.org/zap"
   packages = [
     ".",
@@ -368,8 +383,8 @@
     "zapcore",
   ]
   pruneopts = "UT"
-  revision = "33e58d4d0120aa28d4df84cd244838c490846c9d"
-  version = "v1.13.0"
+  revision = "c89bd3c833f56cad3bc6dfa104b9c6d144526145"
+  version = "v1.14.0"
 
 [[projects]]
   branch = "master"
@@ -377,7 +392,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "ecb85df213405b7d32e4d73cb5bbaace2ec88881"
+  revision = "2aa609cf4a9d7d1126360de73b55b6002f9e052a"
 
 [[projects]]
   branch = "master"
@@ -392,7 +407,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:96c0696233ec0e7c9f472c53c8fa3d2c50f476341d24f101236367d80ef0ca19"
+  digest = "1:dbcb1d07f64dab3790deae7567a9f45b9a93e1266ba8f4f0e011683180d0fa24"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -403,7 +418,7 @@
     "idna",
   ]
   pruneopts = "UT"
-  revision = "16171245cfb220d5317888b716d69c1fb4e7992b"
+  revision = "5a598a2470a0279bd28bab287167dc1ef0813153"
 
 [[projects]]
   branch = "master"
@@ -418,14 +433,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b40521580b68b3cd78f87d1820116ba94090f426b7da3c4e3124e874e1f431dd"
+  digest = "1:e6f3eca022d18ff28112534a46d8bad7400b1523724061dff2d1bfc737bee376"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "d101bd2416d505c0448a6ce8a282482678040a89"
+  revision = "d5e6a3e2c0ae16fc7480523ebcb7fd4dd3215489"
 
 [[projects]]
   digest = "1:66a2f252a58b4fbbad0e4e180e1d85a83c222b6bce09c3dcdef3dc87c72eda7c"
@@ -463,7 +478,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:048c2d9968a02665e815995397497caf0427a29789473b30cd21e209d5652328"
+  digest = "1:6c987c99d0278d185872430501897c2f78523b972e9a77b7ed62939e32c4a26d"
   name = "golang.org/x/tools"
   packages = [
     "go/analysis",
@@ -472,15 +487,17 @@
     "go/ast/inspector",
     "go/buildutil",
     "go/gcexportdata",
+    "go/internal/cgo",
     "go/internal/gcimporter",
     "go/internal/packagesdriver",
+    "go/loader",
     "go/packages",
     "go/types/objectpath",
     "go/types/typeutil",
     "internal/packagesinternal",
   ]
   pruneopts = "UT"
-  revision = "61798d64f0258df3b7b6e3667997eaebec9c0d99"
+  revision = "e1da425f72fd3793b579f4e74d908ba96eb16c8a"
 
 [[projects]]
   branch = "master"
@@ -526,38 +543,42 @@
   version = "v2.2.8"
 
 [[projects]]
-  digest = "1:131158a88aad1f94854d0aa21a64af2802d0a470fb0f01cb33c04fafd2047111"
+  digest = "1:735ae15b76858155230553ed0845ba4cc1dbb7c2ca665ab33bfd2eb1509b219c"
   name = "honnef.co/go/tools"
   packages = [
     "arg",
     "cmd/staticcheck",
+    "code",
     "config",
     "deprecated",
+    "edit",
     "facts",
     "functions",
     "go/types/typeutil",
     "internal/cache",
-    "internal/passes/buildssa",
+    "internal/passes/buildir",
     "internal/renameio",
+    "internal/robustio",
     "internal/sharedcheck",
+    "ir",
+    "ir/irutil",
     "lint",
     "lint/lintdsl",
     "lint/lintutil",
     "lint/lintutil/format",
     "loader",
+    "pattern",
     "printf",
+    "report",
     "simple",
-    "ssa",
-    "ssautil",
     "staticcheck",
-    "staticcheck/vrp",
     "stylecheck",
     "unused",
     "version",
   ]
   pruneopts = "UT"
-  revision = "afd67930eec2a9ed3e9b19f684d17a062285f16a"
-  version = "2019.2.3"
+  revision = "508b5eb18ee2f667ce06235ed383647038e2afc5"
+  version = "2020.1.3"
 
 [[projects]]
   digest = "1:17cead3c012417dd2dd336113138c19de2537062a0f7a08085c7adede5e464b4"
@@ -603,8 +624,8 @@
     "storage/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "7ea599edc7fd1198238be103353ca78eef24ae63"
-  version = "v0.17.2"
+  revision = "ef0cd3ac5f239dcd07b58dc7f6f0698d7aa74efd"
+  version = "v0.17.3"
 
 [[projects]]
   digest = "1:37acde00341a30469c996d5241210e5ba0edf15938b06f6e47f6aad3cb1331f3"
@@ -711,7 +732,7 @@
   revision = "861946025e3491219eaccb1bf693e23df70c2fa8"
 
 [[projects]]
-  digest = "1:5feb2920ee916a4e0992c3b6a056c0508904341149fee904d0e987011dd80b12"
+  digest = "1:f4fb12afbafe508dd716b79253f162499e335dfdae91c79e11b473fc49de1d63"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/client",
@@ -724,6 +745,7 @@
     "pkg/log",
     "pkg/log/zap",
     "pkg/runtime/log",
+    "pkg/scheme",
   ]
   pruneopts = "UT"
   revision = "198197fe0fd7553cadd8afcd3338f8ee4b8a7e3f"
@@ -743,21 +765,28 @@
   input-imports = [
     "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1",
     "github.com/ghodss/yaml",
+    "github.com/go-logr/logr",
     "github.com/go-openapi/spec",
     "github.com/go-openapi/strfmt",
     "github.com/go-openapi/validate",
     "github.com/googleapis/gnostic/OpenAPIv2",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
+    "github.com/openshift/api/console/v1",
+    "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
+    "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/assert",
+    "go.uber.org/zap",
+    "go.uber.org/zap/zapcore",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
@@ -768,7 +797,10 @@
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
+    "sigs.k8s.io/controller-runtime/pkg/log",
+    "sigs.k8s.io/controller-runtime/pkg/log/zap",
     "sigs.k8s.io/controller-runtime/pkg/runtime/log",
+    "sigs.k8s.io/controller-runtime/pkg/scheme",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
