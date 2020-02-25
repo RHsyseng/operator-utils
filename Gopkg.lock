@@ -273,16 +273,54 @@
   version = "1.0.1"
 
 [[projects]]
-  branch = "release-4.3"
-  digest = "1:4ca613395387d56b5bb11e563d698bf86abdb1b29fb6600836c1e7e0e9d1342c"
+  branch = "testmod"
+  digest = "1:118bc0119b6c6f69e395438360b5d4298a1afb7bb8319bd2f8630fd38ca74e55"
+  name = "github.com/myeung18/operator-utils"
+  packages = [
+    "internal/platform",
+    "pkg/resource",
+    "pkg/resource/compare",
+    "pkg/resource/test",
+    "pkg/resource/write/hooks",
+    "pkg/webconsole/creator",
+    "pkg/webconsole/factory",
+    "pkg/webconsole/utils",
+  ]
+  pruneopts = "UT"
+  revision = "734c931c0cccba8d4a1fb3db9a4ae5a8b9a1f016"
+
+[[projects]]
+  branch = "master"
+  digest = "1:3db2a362023a0919d1ae47d6488bf72a33cf676b6e668932966cb04119a24769"
   name = "github.com/openshift/api"
   packages = [
     "apps/v1",
     "build/v1",
+    "config/v1",
+    "console/v1",
+    "operator/v1",
+    "operator/v1alpha1",
     "route/v1",
   ]
   pruneopts = "UT"
-  revision = "e9d93e317dd13b6f135baca5cee888d5ff3c222b"
+  revision = "c99157bc6492218400b18cde7f66510f9ee56a9a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ec46c6ee3450ed4f0ce2d895cb0cc394cc70ed8c405fcc67fe9fcbd40210d2a2"
+  name = "github.com/openshift/client-go"
+  packages = [
+    "config/clientset/versioned/scheme",
+    "config/clientset/versioned/typed/config/v1",
+    "console/clientset/versioned/scheme",
+    "console/clientset/versioned/typed/console/v1",
+    "operator/clientset/versioned/scheme",
+    "operator/clientset/versioned/typed/operator/v1",
+    "route/clientset/versioned/scheme",
+    "route/clientset/versioned/typed/route/v1",
+  ]
+  pruneopts = "UT"
+  revision = "92a2713fa240ea8a375a982d60b43ef5119f85ba"
 
 [[projects]]
   digest = "1:9e1d37b58d17113ec3cb5608ac0382313c5b59470b94ed97d0976e69c7022314"
@@ -653,13 +691,15 @@
   version = "kubernetes-1.16.2"
 
 [[projects]]
-  digest = "1:737abe963a71c60df0474ed4fdcd0a9b10f5af6f483c9d906b1bd3d1dd24ad0b"
+  digest = "1:d7d9e01df4e278de6ebce88e348488b6e70896855df59cec5dd765aaffc54eba"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "discovery/fake",
     "dynamic",
     "kubernetes/scheme",
+    "kubernetes/typed/apps/v1",
+    "kubernetes/typed/core/v1",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
     "pkg/apis/clientauthentication/v1beta1",
@@ -675,6 +715,7 @@
     "tools/clientcmd/api/latest",
     "tools/clientcmd/api/v1",
     "tools/metrics",
+    "tools/reference",
     "transport",
     "util/cert",
     "util/connrotation",
@@ -747,9 +788,20 @@
     "github.com/go-openapi/strfmt",
     "github.com/go-openapi/validate",
     "github.com/googleapis/gnostic/OpenAPIv2",
+    "github.com/myeung18/operator-utils/internal/platform",
+    "github.com/myeung18/operator-utils/pkg/resource",
+    "github.com/myeung18/operator-utils/pkg/resource/compare",
+    "github.com/myeung18/operator-utils/pkg/resource/test",
+    "github.com/myeung18/operator-utils/pkg/resource/write/hooks",
+    "github.com/myeung18/operator-utils/pkg/webconsole/creator",
+    "github.com/myeung18/operator-utils/pkg/webconsole/factory",
+    "github.com/myeung18/operator-utils/pkg/webconsole/utils",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
+    "github.com/openshift/api/console/v1",
     "github.com/openshift/api/route/v1",
+    "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1",
+    "github.com/openshift/client-go/console/clientset/versioned/typed/console/v1",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/assert",
     "k8s.io/api/apps/v1",
@@ -761,8 +813,11 @@
     "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
+    "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
+    "k8s.io/client-go/tools/clientcmd",
+    "k8s.io/client-go/tools/clientcmd/api",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/client/fake",

@@ -1,0 +1,8 @@
+apiVersion: console.openshift.io/v1
+kind: ConsoleExternalLogLink
+metadata:
+  name: example
+spec:
+  hrefTemplate: >-
+    https://example.com/logs?resourceName=${resourceName}&containerName=${containerName}&resourceNamespace=${resourceNamespace}&podLabels=${podLabels}
+  text: Example Logs

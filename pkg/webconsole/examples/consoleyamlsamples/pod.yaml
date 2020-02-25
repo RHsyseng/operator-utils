@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: foo-pod-example
+  labels:
+    app: web
+    foo: bar
+    bar: baz
+  annotations:
+    consolekind: ConsoleYAMLSample
+    consolename: podexample
+    consoledesc: Pod example
+    consoletitle: Pod example
+spec:
+  containers:
+    - name: foo-pod-example
+      image: foopod/example
+      command: ["foo"]
+      args: ["--example", "1"]
