@@ -1,6 +1,5 @@
 package kubernetes
 
-
 import (
 	"context"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"

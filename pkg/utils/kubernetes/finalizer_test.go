@@ -13,46 +13,61 @@ import (
 	"testing"
 )
 
-var defaultFn = func() error { return nil }
+type MockFinalizer struct {
+	name         string
+	onFinalizeFn func() error
+}
+
+func (m *MockFinalizer) getName() string {
+	return m.name
+}
+
+func (m *MockFinalizer) onFinalize() error {
+	if m.onFinalizeFn == nil {
+		return nil
+	}
+	return m.onFinalizeFn()
+}
+
+func (m *MockFinalizer) setOnFinalizeFn(onFinalizeFn func() error) {
+	m.onFinalizeFn = onFinalizeFn
+}
+
+func NewMockFinalizer(name string) *MockFinalizer {
+	return &MockFinalizer{name, func() error { return nil }}
+}
+
+func NewMockFinalizerWithError(name string) *MockFinalizer {
+	return &MockFinalizer{name, func() error { return errors.New("Mock error") }}
+}
 
 func TestFinalizerManager_RegisterFinalizer(t *testing.T) {
 	var cases = []struct {
 		name       string
-		finalizers []string
-		functions  []func() error
+		finalizers []Finalizer
 		expected   []string
 		shouldFail bool
 	}{
 		{
 			"Register one finalizer",
-			[]string{"finalizer1"},
-			[]func() error{defaultFn},
+			[]Finalizer{NewMockFinalizer("finalizer1")},
 			[]string{"finalizer1"},
 			false,
 		},
 		{
 			"Register multiple finalizers",
-			[]string{"finalizer1", "finalizer2", "finalizer3"},
-			[]func() error{defaultFn, defaultFn, defaultFn},
+			[]Finalizer{NewMockFinalizer("finalizer1"), NewMockFinalizer("finalizer2"), NewMockFinalizer("finalizer3")},
 			[]string{"finalizer1", "finalizer2", "finalizer3"},
 			false,
 		},
 		{
 			"Repeated finalizers should be replaced",
-			[]string{"finalizer1", "finalizer2", "finalizer1"},
-			[]func() error{func() error { return errors.New("Unexpected") }, defaultFn, defaultFn},
+			[]Finalizer{NewMockFinalizerWithError("finalizer1"), NewMockFinalizer("finalizer2"), NewMockFinalizer("finalizer1")},
 			[]string{"finalizer1", "finalizer2"},
 			false,
 		}, {
 			"Empty finalizer should produce an error",
-			[]string{""},
-			[]func() error{defaultFn},
-			[]string{},
-			true,
-		}, {
-			"nil function should produce an error",
-			[]string{"finalizer1"},
-			[]func() error{nil},
+			[]Finalizer{NewMockFinalizer("")},
 			[]string{},
 			true,
 		},
@@ -74,8 +89,8 @@ func TestFinalizerManager_RegisterFinalizer(t *testing.T) {
 			return mockPlatformSvc.Client.Update(ctx, obj, opts...)
 		}
 		var err error
-		for i, f := range c.finalizers {
-			err = mgr.RegisterFinalizer(pod, f, c.functions[i])
+		for _, f := range c.finalizers {
+			err = mgr.RegisterFinalizer(pod, f)
 		}
 		if c.shouldFail {
 			assert.NotNil(t, err, c.name)
@@ -84,7 +99,7 @@ func TestFinalizerManager_RegisterFinalizer(t *testing.T) {
 			assert.Len(t, pod.GetFinalizers(), len(c.expected), c.name)
 			for _, e := range c.expected {
 				assert.Contains(t, pod.GetFinalizers(), e, c.name)
-				assert.Nil(t, mgr.objects[pod.GetUID()][e](), c.name)
+				assert.Nil(t, mgr.objects[pod.GetUID()][e].onFinalize(), c.name)
 			}
 			assert.True(t, hasUpdated, c.name)
 		}
@@ -105,9 +120,9 @@ func TestFinalizerManager_RegisterFinalizer_IsFinalizing(t *testing.T) {
 	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		return errors.New("Should not be updated")
 	}
-	expected := "finalizer.example.com"
+	expected := NewMockFinalizer("finalizer.example.com")
 
-	err := mgr.RegisterFinalizer(pod, expected, func() error { return nil })
+	err := mgr.RegisterFinalizer(pod, expected)
 
 	assert.Nil(t, err)
 	assert.NotContains(t, pod.GetFinalizers(), expected)
@@ -126,9 +141,9 @@ func TestFinalizerManager_RegisterFinalizer_UpdateFails(t *testing.T) {
 	mockPlatformSvc.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...clientv1.UpdateOption) error {
 		return errors.New("Some error")
 	}
-	expected := "finalizer.example.com"
+	expected := NewMockFinalizer("finalizer.example.com")
 
-	err := mgr.RegisterFinalizer(pod, expected, func() error { return nil })
+	err := mgr.RegisterFinalizer(pod, expected)
 
 	assert.NotNil(t, err)
 	assert.NotContains(t, mgr.objects[pod.GetUID()], expected)
@@ -184,9 +199,9 @@ func TestFinalizerManager_UnregisterFinalizer(t *testing.T) {
 		mockPlatformSvc.Create(context.TODO(), pod)
 		mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 			pod.GetUID(): {
-				"finalizer1": defaultFn,
-				"finalizer2": defaultFn,
-				"finalizer3": defaultFn,
+				"finalizer1": NewMockFinalizer("finalizer1"),
+				"finalizer2": NewMockFinalizer("finalizer2"),
+				"finalizer3": NewMockFinalizer("finalizer3"),
 			},
 		}}
 		hasUpdated := false
@@ -205,7 +220,7 @@ func TestFinalizerManager_UnregisterFinalizer(t *testing.T) {
 			assert.Len(t, pod.GetFinalizers(), len(c.expected), c.name)
 			for _, e := range c.expected {
 				assert.Contains(t, pod.GetFinalizers(), e, c.name)
-				assert.Nil(t, mgr.objects[pod.GetUID()][e](), c.name)
+				assert.Nil(t, mgr.objects[pod.GetUID()][e].onFinalize(), c.name)
 			}
 			assert.True(t, hasUpdated, c.name)
 		}
@@ -224,9 +239,9 @@ func TestFinalizerManager_UnregisterFinalizer_UpdateFails(t *testing.T) {
 	mockPlatformSvc.Create(context.TODO(), pod)
 	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
-			"finalizer1": defaultFn,
-			"finalizer2": defaultFn,
-			"finalizer3": defaultFn,
+			"finalizer1": NewMockFinalizer("finalizer1"),
+			"finalizer2": NewMockFinalizer("finalizer2"),
+			"finalizer3": NewMockFinalizer("finalizer3"),
 		},
 	}}
 
@@ -243,9 +258,17 @@ func TestFinalizerManager_UnregisterFinalizer_UpdateFails(t *testing.T) {
 
 func TestFinalizerManager_FinalizeOnDelete(t *testing.T) {
 	count := 0
+	finalizers := []*MockFinalizer{
+		NewMockFinalizer("finalizer1"),
+		NewMockFinalizer("finalizer2"),
+		NewMockFinalizer("finalizer3"),
+	}
 	onFinalize := func() error {
 		count++
 		return nil
+	}
+	for _, f := range finalizers {
+		f.setOnFinalizeFn(onFinalize)
 	}
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -259,9 +282,9 @@ func TestFinalizerManager_FinalizeOnDelete(t *testing.T) {
 	mockPlatformSvc.Create(context.TODO(), pod)
 	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
-			"finalizer1": onFinalize,
-			"finalizer2": onFinalize,
-			"finalizer3": onFinalize,
+			finalizers[0].getName(): finalizers[0],
+			finalizers[1].getName(): finalizers[1],
+			finalizers[2].getName(): finalizers[2],
 		},
 	}}
 	updated := 0
@@ -280,9 +303,17 @@ func TestFinalizerManager_FinalizeOnDelete(t *testing.T) {
 
 func TestFinalizerManager_FinalizeOnDelete_NotFinalizing(t *testing.T) {
 	count := 0
+	finalizers := []*MockFinalizer{
+		NewMockFinalizer("finalizer1"),
+		NewMockFinalizer("finalizer2"),
+		NewMockFinalizer("finalizer3"),
+	}
 	onFinalize := func() error {
 		count++
 		return nil
+	}
+	for _, f := range finalizers {
+		f.onFinalizeFn = onFinalize
 	}
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -300,9 +331,9 @@ func TestFinalizerManager_FinalizeOnDelete_NotFinalizing(t *testing.T) {
 	}
 	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
-			"finalizer1": onFinalize,
-			"finalizer2": onFinalize,
-			"finalizer3": onFinalize,
+			finalizers[0].getName(): finalizers[0],
+			finalizers[1].getName(): finalizers[1],
+			finalizers[2].getName(): finalizers[2],
 		},
 	}}
 
@@ -316,6 +347,11 @@ func TestFinalizerManager_FinalizeOnDelete_NotFinalizing(t *testing.T) {
 
 func TestFinalizerManager_FinalizeOnDelete_UpdatingErrors(t *testing.T) {
 	count := 0
+	finalizers := []*MockFinalizer{
+		NewMockFinalizer("finalizer1"),
+		NewMockFinalizer("finalizer2"),
+		NewMockFinalizer("finalizer3"),
+	}
 	onFinalize := func() error {
 		if count == 1 {
 			return errors.New("Some error")
@@ -323,6 +359,10 @@ func TestFinalizerManager_FinalizeOnDelete_UpdatingErrors(t *testing.T) {
 		count++
 		return nil
 	}
+	for _, f := range finalizers {
+		f.onFinalizeFn = onFinalize
+	}
+
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "example",
@@ -335,9 +375,9 @@ func TestFinalizerManager_FinalizeOnDelete_UpdatingErrors(t *testing.T) {
 	mockPlatformSvc.Create(context.TODO(), pod)
 	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
-			"finalizer1": onFinalize,
-			"finalizer2": onFinalize,
-			"finalizer3": onFinalize,
+			finalizers[0].getName(): finalizers[0],
+			finalizers[1].getName(): finalizers[1],
+			finalizers[2].getName(): finalizers[2],
 		},
 	}}
 	updated := 0
@@ -356,9 +396,17 @@ func TestFinalizerManager_FinalizeOnDelete_UpdatingErrors(t *testing.T) {
 
 func TestFinalizerManager_FinalizeOnDelete_FinalizerErrors(t *testing.T) {
 	count := 0
+	finalizers := []*MockFinalizer{
+		NewMockFinalizer("finalizer1"),
+		NewMockFinalizer("finalizer2"),
+		NewMockFinalizer("finalizer3"),
+	}
 	onFinalize := func() error {
 		count++
 		return nil
+	}
+	for _, f := range finalizers {
+		f.onFinalizeFn = onFinalize
 	}
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -372,9 +420,9 @@ func TestFinalizerManager_FinalizeOnDelete_FinalizerErrors(t *testing.T) {
 	mockPlatformSvc.Create(context.TODO(), pod)
 	mgr := FinalizerManager{PlatformService: mockPlatformSvc, objects: map[types.UID]ObjectFinalizer{
 		pod.GetUID(): {
-			"finalizer1": onFinalize,
-			"finalizer2": onFinalize,
-			"finalizer3": onFinalize,
+			finalizers[0].getName(): finalizers[0],
+			finalizers[1].getName(): finalizers[1],
+			finalizers[2].getName(): finalizers[2],
 		},
 	}}
 	updated := 0

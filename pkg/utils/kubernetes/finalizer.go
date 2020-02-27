@@ -11,45 +11,44 @@ import (
 	"strings"
 )
 
-//OnFinalize Callback function to be executed when an object is being deleted
-type OnFinalize func() error
-
-type ObjectFinalizer map[string]OnFinalize
+type ObjectFinalizer map[string]Finalizer
 
 type FinalizerManager struct {
 	objects map[types.UID]ObjectFinalizer
 	PlatformService
 }
 
+type Finalizer interface {
+	getName() string
+	onFinalize() error
+}
+
 func NewFinalizerManager(service PlatformService) FinalizerManager {
 	return FinalizerManager{
-		objects: map[types.UID]ObjectFinalizer{},
+		objects:         map[types.UID]ObjectFinalizer{},
 		PlatformService: service,
 	}
 }
 
 //RegisterFinalizer registers a finalizer function to be executed when the object is marked to be deleted.
-func (mgr *FinalizerManager) RegisterFinalizer(owner resource.KubernetesResource, name string, onFinalize OnFinalize) error {
+func (mgr *FinalizerManager) RegisterFinalizer(owner resource.KubernetesResource, finalizer Finalizer) error {
 	if mgr.IsFinalizing(owner) {
 		return nil
 	}
-	err := validateFinalizer(name, onFinalize)
+	err := validateFinalizerName(finalizer.getName())
 	if err != nil {
 		return err
 	}
-	controllerutil.AddFinalizer(owner, name)
-	if err != nil {
-		return err
-	}
+	controllerutil.AddFinalizer(owner, finalizer.getName())
 	err = mgr.Update(context.TODO(), owner)
 	if err != nil {
 		return err
 	}
 	_, ok := mgr.objects[owner.GetUID()]
 	if !ok {
-		mgr.objects[owner.GetUID()] = map[string]OnFinalize{}
+		mgr.objects[owner.GetUID()] = map[string]Finalizer{}
 	}
-	mgr.objects[owner.GetUID()][name] = onFinalize
+	mgr.objects[owner.GetUID()][finalizer.getName()] = finalizer
 	return nil
 }
 
@@ -75,7 +74,7 @@ func (mgr *FinalizerManager) FinalizeOnDelete(owner resource.KubernetesResource)
 		return nil
 	}
 	for n, f := range mgr.objects[owner.GetUID()] {
-		err := f()
+		err := f.onFinalize()
 		if err != nil {
 			return err
 		}
@@ -90,17 +89,6 @@ func (mgr *FinalizerManager) FinalizeOnDelete(owner resource.KubernetesResource)
 //IsFinalizing An object is considered to be finalizing when its deletionTimestamp is not null
 func (mgr *FinalizerManager) IsFinalizing(owner metav1.Object) bool {
 	return owner.GetDeletionTimestamp() != nil
-}
-
-func validateFinalizer(name string, onFinalize OnFinalize) error {
-	err := validateFinalizerName(name)
-	if err != nil {
-		return err
-	}
-	if onFinalize == nil {
-		return errors.New("the finalizer OnFinalize function must not be nil")
-	}
-	return nil
 }
 
 func validateFinalizerName(name string) error {
