@@ -167,6 +167,21 @@ func TestCompareBuildConfigWebHooks(t *testing.T) {
 	assert.True(t, equalBuildConfigs(&bcs[0], &bcs[1]), "Expected resources to be deemed equal based on BC comparator")
 }
 
+func TestCompareBuildConfigEnvVars(t *testing.T) {
+	bcs := utils.GetBuildConfigs(2)
+	ordered := utils.GetEnvVars(3, true)
+	unordered := utils.GetEnvVars(3, false)
+	bcs[1].Name = bcs[0].Name
+
+	bcs[0].Spec.Strategy.SourceStrategy = &obuildv1.SourceBuildStrategy{Env: ordered}
+	bcs[1].Spec.Strategy.SourceStrategy = &obuildv1.SourceBuildStrategy{Env: ordered}
+	assert.True(t, equalBuildConfigs(&bcs[0], &bcs[1]), "Expected resources to be deemed equal based on BC comparator")
+
+	bcs[0].Spec.Strategy.SourceStrategy = &obuildv1.SourceBuildStrategy{Env: ordered}
+	bcs[1].Spec.Strategy.SourceStrategy = &obuildv1.SourceBuildStrategy{Env: unordered}
+	assert.True(t, equalBuildConfigs(&bcs[0], &bcs[1]), "Expected resources to be deemed equal based on BC comparator")
+}
+
 func TestCompareDeployments(t *testing.T) {
 	deployments := utils.GetDeployments(2)
 	deployments[1].Name = deployments[0].Name
@@ -287,4 +302,47 @@ func Test_mergeSecretStringDataToData(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCompareUnorderedDeploymentEnvVars(t *testing.T) {
+	deployments := utils.GetDeployments(2)
+	deployments[1].Name = deployments[0].Name
+	container := corev1.Container{Name: "my-container"}
+	orderedVars := utils.GetEnvVars(3, true)
+	unorderedVars := utils.GetEnvVars(3, false)
+
+	assert.Contains(t, unorderedVars[0].Name, "3")
+
+	deployments[0].Spec.Template.Spec.Containers = append(deployments[0].Spec.Template.Spec.Containers, container)
+	deployments[1].Spec.Template.Spec.Containers = append(deployments[1].Spec.Template.Spec.Containers, container)
+	deployments[0].Spec.Template.Spec.Containers[0].Env = orderedVars
+	deployments[1].Spec.Template.Spec.Containers[0].Env = orderedVars
+
+	assert.True(t, deepEquals(&deployments[0], &deployments[1]), "Has the same EnvVars. Expected resources to be deemed equal")
+	assert.True(t, equalDeployment(&deployments[0], &deployments[1]), "Has the same EnvVars. Expected resources to be deemed equal based on Deployment comparator")
+
+	deployments[1].Spec.Template.Spec.Containers[0].Env = unorderedVars
+
+	assert.True(t, deepEquals(&deployments[0], &deployments[1]), "Has the same EnvVars, unordered. Expected resources to be deemed equal")
+	assert.True(t, equalDeployment(&deployments[0], &deployments[1]), "Has the same EnvVars, unordered. Expected resources to be deemed equal based on Deployment comparator")
+}
+
+func TestCompareUnorderedDeploymentConfigEnvVars(t *testing.T) {
+	deployments := utils.GetDeploymentConfigs(2)
+	deployments[1].Name = deployments[0].Name
+	container := corev1.Container{Name: "my-container"}
+	orderedVars := utils.GetEnvVars(3, true)
+	unorderedVars := utils.GetEnvVars(3, false)
+	deployments[0].Spec.Template.Spec.Containers = append(deployments[0].Spec.Template.Spec.Containers, container)
+	deployments[1].Spec.Template.Spec.Containers = append(deployments[1].Spec.Template.Spec.Containers, container)
+	deployments[0].Spec.Template.Spec.Containers[0].Env = orderedVars
+	deployments[1].Spec.Template.Spec.Containers[0].Env = orderedVars
+
+	assert.True(t, deepEquals(&deployments[0], &deployments[1]), "Has the same EnvVars. Expected resources to be deemed equal")
+	assert.True(t, equalDeploymentConfigs(&deployments[0], &deployments[1]), "Has the same EnvVars. Expected resources to be deemed equal based on DeploymentConfig comparator")
+
+	deployments[1].Spec.Template.Spec.Containers[0].Env = unorderedVars
+
+	assert.True(t, deepEquals(&deployments[0], &deployments[1]), "Has the same EnvVars, unordered. Expected resources to be deemed equal")
+	assert.True(t, equalDeploymentConfigs(&deployments[0], &deployments[1]), "Has the same EnvVars, unordered. Expected resources to be deemed equal based on DeploymentConfig comparator")
 }
