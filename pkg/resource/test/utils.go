@@ -100,3 +100,19 @@ func GetSecrets(count int) []corev1.Secret {
 	}
 	return slice
 }
+
+func GetEnvVars(count int, ordered bool) []corev1.EnvVar {
+	var slice []corev1.EnvVar
+	suffix := 0
+	for i := 0; i < count; i++ {
+		if ordered {
+			suffix = i + 1
+		} else {
+			suffix = count - i
+		}
+		env := corev1.EnvVar{Name: fmt.Sprintf("VAR%d", suffix), Value: fmt.Sprintf("value_%d", suffix)}
+		slice = append(slice, env)
+	}
+
+	return slice
+}
