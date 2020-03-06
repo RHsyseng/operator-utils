@@ -60,7 +60,7 @@ func TestExtendedReconciler_RegisterFinalizer(t *testing.T) {
 	err := extReconciler.RegisterFinalizer(&MockFinalizer{})
 	assert.Errorf(t, err, "the finalizer name must not be empty")
 	assert.Len(t, extReconciler.Finalizers, 0)
-	
+
 	err = extReconciler.RegisterFinalizer(&MockFinalizer{
 		name: "finalizer1",
 	})
@@ -113,7 +113,7 @@ func TestExtendedReconciler_FinalizeOnDelete(t *testing.T) {
 
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "somepod",
+			Name:      "somepod",
 			Namespace: "somenamespace",
 		},
 	}
@@ -143,7 +143,7 @@ func TestExtendedReconciler_FinalizeOnDeleteUnregisteredFinalizer(t *testing.T) 
 
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "somepod",
+			Name:      "somepod",
 			Namespace: "somenamespace",
 		},
 	}
@@ -173,7 +173,7 @@ func TestExtendedReconciler_FinalizeOnDeleteErrorOnFinalize(t *testing.T) {
 
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "somepod",
+			Name:      "somepod",
 			Namespace: "somenamespace",
 		},
 	}
@@ -204,7 +204,7 @@ func TestExtendedReconciler_FinalizeOnDeleteErrorOnUpdate(t *testing.T) {
 
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "somepod",
+			Name:      "somepod",
 			Namespace: "somenamespace",
 		},
 	}
@@ -239,7 +239,7 @@ func TestExtendedReconciler_Reconcile(t *testing.T) {
 	}
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "somepod",
+			Name:      "somepod",
 			Namespace: "somenamespace",
 		},
 	}
@@ -247,12 +247,9 @@ func TestExtendedReconciler_Reconcile(t *testing.T) {
 
 	extReconciler.Service.Create(context.TODO(), pod)
 
-	request := reconcile.Request{
-		types.NamespacedName{
-			Name: pod.GetName(),
-			Namespace: pod.GetNamespace(),
-		},
-	}
+	request := reconcile.Request{}
+	request.Namespace = pod.GetNamespace()
+	request.Name = pod.GetName()
 	result, err := extReconciler.Reconcile(request)
 	assert.Nil(t, err)
 	assert.Equal(t, reconcile.Result{}, result)
