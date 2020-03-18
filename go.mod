@@ -6,6 +6,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
 	github.com/coreos/prometheus-operator v0.35.1
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/go-openapi/analysis v0.19.7 // indirect
 	github.com/go-openapi/errors v0.19.3 // indirect
@@ -21,12 +22,13 @@ require (
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/openshift/api v0.0.0-20200205145930-e9d93e317dd1
+	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.4.0
 	go.mongodb.org/mongo-driver v1.3.0 // indirect
 	go.uber.org/atomic v1.5.1 // indirect
 	go.uber.org/multierr v1.4.0 // indirect
-	go.uber.org/zap v1.13.0 // indirect
+	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200208060501-ecb85df21340 // indirect
 	golang.org/x/lint v0.0.0-20200130185559-910be7a94367 // indirect
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect

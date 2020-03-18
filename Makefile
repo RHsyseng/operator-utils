@@ -1,3 +1,5 @@
+export GOFLAGS=-mod=vendor
+
 .PHONY: all
 all: test
 
@@ -11,8 +13,8 @@ format: mod
 
 .PHONY: vet
 vet: format
-	go vet -mod=vendor ./...
+	go vet ./...
 
 .PHONY: test
 test: vet
-	go test -mod=vendor ./...
+	go test ./...
