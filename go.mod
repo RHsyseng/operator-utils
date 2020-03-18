@@ -47,7 +47,8 @@ require (
 
 replace (
 	// OpenShift release-4.3
-	github.com/openshift/api => github.com/openshift/api v3.9.1-0.20200205145930-e9d93e317dd1+incompatible
+	github.com/openshift/api => github.com/openshift/api v0.0.0-20200205145930-e9d93e317dd1
+	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20191125132246-f6563a70e19a
 
 	// Pinned to kubernetes-1.16.2
 	k8s.io/api => k8s.io/api v0.0.0-20191016110408-35e52d86657a
