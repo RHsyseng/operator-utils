@@ -132,7 +132,7 @@ func TestExtendedReconciler_FinalizeOnDelete(t *testing.T) {
 	err = extReconciler.finalizeOnDelete(pod)
 	assert.Nil(t, err)
 	assert.Empty(t, pod.GetFinalizers())
-	assert.Empty(t, extReconciler.Finalizers)
+	assert.Len(t, extReconciler.Finalizers, 2)
 }
 
 func TestExtendedReconciler_FinalizeOnDeleteUnregisteredFinalizer(t *testing.T) {
@@ -158,7 +158,7 @@ func TestExtendedReconciler_FinalizeOnDeleteUnregisteredFinalizer(t *testing.T) 
 	err = extReconciler.Service.Get(context.TODO(), types.NamespacedName{Name: pod.GetName(), Namespace: pod.GetNamespace()}, newPod)
 	assert.Nil(t, err)
 	assert.Len(t, newPod.GetFinalizers(), 1)
-	assert.Len(t, extReconciler.Finalizers, 0)
+	assert.Len(t, extReconciler.Finalizers, 1)
 }
 
 func TestExtendedReconciler_FinalizeOnDeleteErrorOnFinalize(t *testing.T) {
@@ -268,7 +268,7 @@ func TestExtendedReconciler_Reconcile(t *testing.T) {
 	err = extReconciler.Service.Get(context.TODO(), request.NamespacedName, newPod)
 	assert.Nil(t, err)
 	assert.Len(t, newPod.GetFinalizers(), 0)
-	assert.Len(t, extReconciler.Finalizers, 0)
+	assert.Len(t, extReconciler.Finalizers, 2)
 	assert.True(t, f1Invoked)
 	assert.True(t, f2Invoked)
 }
