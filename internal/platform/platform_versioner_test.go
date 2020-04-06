@@ -135,3 +135,90 @@ func TestK8SBasedPlatformVersioner_GetPlatformInfo(t *testing.T) {
 		}
 	}
 }
+
+func TestClientCallVersionComparsion(t *testing.T) {
+	pv := K8SBasedPlatformVersioner{}
+	testcases := []struct {
+		label        string
+		discoverer   Discoverer
+		config       *rest.Config
+		expectedInfo  int
+		expectedErr  bool
+	}{
+		{
+			label: "case 1",
+			discoverer: FakeDiscoverer{
+				serverInfo: &version.Info{
+					Major: "1",
+					Minor: "16",
+				},
+				groupList: &v1.APIGroupList{
+					TypeMeta: v1.TypeMeta{},
+					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
+				},
+			},
+			config:       &rest.Config{},
+			expectedInfo: 0,
+			expectedErr:  false,
+		},
+		{
+			label: "case 2",
+			discoverer: FakeDiscoverer{
+				serverInfo: &version.Info{
+					Major: "1",
+					Minor: "16+",
+				},
+				groupList: &v1.APIGroupList{
+					TypeMeta: v1.TypeMeta{},
+					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
+				},
+			},
+			config:       &rest.Config{},
+			expectedInfo: 0,
+			expectedErr:  false,
+		},
+		{
+			label: "case 3",
+			discoverer: FakeDiscoverer{
+				serverInfo: &version.Info{
+					Major: "1",
+					Minor: "14+",
+				},
+				groupList: &v1.APIGroupList{
+					TypeMeta: v1.TypeMeta{},
+					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
+				},
+			},
+			config:       &rest.Config{},
+			expectedInfo: -1,
+			expectedErr:  false,
+		},
+		{
+			label: "case 4",
+			discoverer: FakeDiscoverer{
+				serverInfo: &version.Info{
+					Major: "1",
+					Minor: "14not",
+				},
+				groupList: &v1.APIGroupList{
+					TypeMeta: v1.TypeMeta{},
+					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
+				},
+			},
+			config:       &rest.Config{},
+			expectedInfo: -1,
+			expectedErr:  true,
+		},
+	}
+
+	versionToTest := "4.3"
+	for _, tc := range testcases {
+		res, err := pv.CompareOpenShiftVersion(tc.discoverer, tc.config, versionToTest)
+		if tc.expectedErr {
+			assert.Error(t, err, "expected error")
+		} else {
+			assert.NoError(t, err, "unexpected error")
+		}
+		assert.Equal(t, tc.expectedInfo, res, "The expected and actual versions should be the same.")
+	}
+}
