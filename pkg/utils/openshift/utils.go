@@ -43,8 +43,16 @@ Supported platform: OpenShift
 cfg : OpenShift platform config, use runtime config if nil is passed in.
 version: Supported version format : Major.Minor
 	       e.g.: 4.3
- */
+*/
 func CompareOpenShiftVersion(cfg *rest.Config, version string) (int, error) {
 	return platform.K8SBasedPlatformVersioner{}.CompareOpenShiftVersion(nil, cfg, version)
 }
 
+/*
+MapKnownVersion maps from K8S version of PlatformInfo to equivalent OpenShift version
+
+Result: OpenShiftVersion{ Version: 4.1.2 }
+*/
+func MapKnownVersion(info platform.PlatformInfo) platform.OpenShiftVersion {
+	return platform.MapKnownVersion(info)
+}
