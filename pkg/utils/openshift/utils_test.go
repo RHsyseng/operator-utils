@@ -36,6 +36,6 @@ func TestOpenShiftVersion_MapKnownVersion(t *testing.T) {
 	}
 
 	for _, v := range cases {
-		assert.Equal(t, v.expectedOCPVersion, platform.MapKnownVersion(v.info).Version, v.label+": expected OCP version to match")
+		assert.Equal(t, v.expectedOCPVersion, MapKnownVersion(v.info).Version, v.label+": expected OCP version to match")
 	}
 }
