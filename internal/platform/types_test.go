@@ -35,15 +35,17 @@ func TestPlatformInfo_String(t *testing.T) {
 func TestVersionHelpers(t *testing.T) {
 
 	ocpTestVersions := []struct {
-		version string
-		major   string
-		minor   string
-		build   string
+		version    string
+		major      string
+		minor      string
+		prerelease string
+		build      string
 	}{
-		{"3.11.69", "3", "11", "69"},
-		{"4.1.0-rc.1", "4", "1", "0-rc.1"},
-		{"1.2.3.4.5.6", "1", "2", "3.4.5.6"},
-		{"1.2", "1", "2", ""},
+		{"v3.11.0+69", "v3", "11", "", "+69"},
+		{"v4.1.0-0+rc.1", "v4", "1", "-0", "+rc.1"},
+		{"v1.2.0+3.4.5.6", "v1", "2", "", "+3.4.5.6"},
+		{"v1.2", "v1", "2", "", ""},
+		{"v1.2.3-prerel", "v1", "2", "-prerel", ""},
 	}
 
 	for _, v := range ocpTestVersions {
@@ -51,6 +53,7 @@ func TestVersionHelpers(t *testing.T) {
 		info := OpenShiftVersion{Version: v.version}
 		assert.Equal(t, v.major, info.MajorVersion(), "OCPMajorVersion mismatch")
 		assert.Equal(t, v.minor, info.MinorVersion(), "OCPMinorVersion mismatch")
+		assert.Equal(t, v.prerelease, info.PrereleaseVersion(), "OCPPrereleaseVersion mismatch")
 		assert.Equal(t, v.build, info.BuildVersion(), "OCPBuildVersion mismatch")
 	}
 }
@@ -65,30 +68,26 @@ func TestOpenShiftVersion_String(t *testing.T) {
 
 func TestVersionComparsion(t *testing.T) {
 	targetVersions := []OpenShiftVersion{
-		OpenShiftVersion{Version: "3.11"},
-		OpenShiftVersion{Version: "4.1"},
-		OpenShiftVersion{Version: "4.3"},
-		OpenShiftVersion{Version: "4.4"},
-		OpenShiftVersion{Version: "4.3fail"},
+		OpenShiftVersion{Version: "v3.11"},
+		OpenShiftVersion{Version: "v4.1"},
+		OpenShiftVersion{Version: "v4.3"},
+		OpenShiftVersion{Version: "v4.4"},
+		OpenShiftVersion{Version: "v4.3fail"},
 	}
 
-	currOCPVersion := OpenShiftVersion{Version: "4.3.1"}
-	res, err := currOCPVersion.Compare(targetVersions[0])
-	assert.NoError(t, err)
+	currOCPVersion := OpenShiftVersion{Version: "v4.3"}
+	res := currOCPVersion.Compare(targetVersions[0])
 	assert.Equal(t, 1, res, "cur. ocp version should be bigger than target.")
 
-	res, err = currOCPVersion.Compare(targetVersions[1])
-	assert.NoError(t, err)
+	res = currOCPVersion.Compare(targetVersions[1])
 	assert.Equal(t, 1, res, "cur. ocp version should be bigger than target.")
 
-	res, err = currOCPVersion.Compare(targetVersions[2])
-	assert.NoError(t, err)
+	res = currOCPVersion.Compare(targetVersions[2])
 	assert.Equal(t, 0, res, "cur. ocp version should be the same as target.")
 
-	res, err = currOCPVersion.Compare(targetVersions[3])
-	assert.NoError(t, err)
+	res = currOCPVersion.Compare(targetVersions[3])
 	assert.Equal(t, -1, res, "cur. ocp version should be smaller than target.")
 
-	res, err = currOCPVersion.Compare(targetVersions[4])
-	assert.Error(t, err, "There should be a parsing error.")
+	res = currOCPVersion.Compare(targetVersions[4])
+	assert.Equal(t, 1, res, "cur. ocp version should be greater than target.")
 }

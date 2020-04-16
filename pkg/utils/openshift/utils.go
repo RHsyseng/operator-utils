@@ -28,6 +28,7 @@ func IsOpenShift(cfg *rest.Config) (bool, error) {
 }
 
 /*
+Deprecated:
 LookupOpenShiftVersion fetches OpenShift version info from API endpoints
 *** NOTE: OCP 4.1+ requires elevated user permissions, see PlatformVersioner for details
 Accepts <nil> or instantiated 'cfg' rest config parameter.
@@ -39,19 +40,30 @@ func LookupOpenShiftVersion(cfg *rest.Config) (platform.OpenShiftVersion, error)
 }
 
 /*
-Supported platform: OpenShift
+Compare the runtime OpenShift with the version passed in.
+version: Semantic format
 cfg : OpenShift platform config, use runtime config if nil is passed in.
-version: Supported version format : Major.Minor
-	       e.g.: 4.3
+return:
+	-1 : if ver1 <  OpenShiftVersion
+	 0 : if ver1 == OpenShiftVersion
+     1 : if ver1 > OpenShiftVersion
+The int value returned should be discarded if err is not nil
 */
-func CompareOpenShiftVersion(cfg *rest.Config, version string) (int, error) {
-	return platform.K8SBasedPlatformVersioner{}.CompareOpenShiftVersion(nil, cfg, version)
+func CompareOpenShiftVersion(version string) (int, error) {
+	return platform.K8SBasedPlatformVersioner{}.CompareOpenShiftVersion(version)
+}
+
+/*
+* return MajorMinor format, e.g. v4.4
+*/
+func GetOpenShiftVersion() (string, error) {
+	return platform.K8SBasedPlatformVersioner{}.GetOpenShiftVersion()
 }
 
 /*
 MapKnownVersion maps from K8S version of PlatformInfo to equivalent OpenShift version
 
-Result: OpenShiftVersion{ Version: 4.1.2 }
+Result: OpenShiftVersion{ Version: v4.1 }
 */
 func MapKnownVersion(info platform.PlatformInfo) platform.OpenShiftVersion {
 	return platform.MapKnownVersion(info)

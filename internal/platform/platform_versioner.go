@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	openapi_v2 "github.com/googleapis/gnostic/OpenAPIv2"
+	"golang.org/x/mod/semver"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
@@ -33,22 +34,26 @@ type K8SBasedPlatformVersioner struct{}
 /*
 MapKnownVersion maps from K8S version of PlatformInfo to equivalent OpenShift version
 
-Result: OpenShiftVersion{ Version: 4.1.2 }
+Result: OpenShiftVersion{ Version: v4.1 }
 */
 func MapKnownVersion(info PlatformInfo) OpenShiftVersion {
 	k8sToOcpMap := map[string]string{
-		"1.10+": "3.10",
-		"1.10":  "3.10",
-		"1.11+": "3.11",
-		"1.11":  "3.11",
-		"1.13+": "4.1",
-		"1.13":  "4.1",
-		"1.14+": "4.2",
-		"1.14":  "4.2",
-		"1.16+": "4.3",
-		"1.16":  "4.3",
+		"1.10+": "v3.10",
+		"1.10":  "v3.10",
+		"1.11+": "v3.11",
+		"1.11":  "v3.11",
+		"1.13+": "v4.1",
+		"1.13":  "v4.1",
+		"1.14+": "v4.2",
+		"1.14":  "v4.2",
+		"1.16+": "v4.3",
+		"1.16":  "v4.3",
+		"1.17+": "v4.4",
+		"1.17":  "v4.4",
+		"1.18+": "v4.5",
+		"1.18":  "v4.5",
 	}
-	return OpenShiftVersion{Version: k8sToOcpMap[info.K8SVersion]}
+	return OpenShiftVersion{Version: semver.MajorMinor(k8sToOcpMap[info.K8SVersion])}
 }
 
 // deal with cfg coming from legacy method signature and allow injection for client testing
@@ -157,14 +162,25 @@ func (pv K8SBasedPlatformVersioner) LookupOpenShiftVersion(client Discoverer, cf
 	return osv, nil
 }
 
-func (pv K8SBasedPlatformVersioner) CompareOpenShiftVersion(client Discoverer, cfg *rest.Config, version string) (int, error) {
-	info, err := pv.GetPlatformInfo(client, cfg)
+func (pv K8SBasedPlatformVersioner) CompareOpenShiftVersion(version string) (int, error) {
+	if "" == semver.MajorMinor(version) {
+		return -1, errors.New("input version is not in correct semantic version format:" + version)
+	}
+	info, err := pv.GetPlatformInfo(nil, nil)
 	if err != nil {
 		return -1, err
 	}
 	if !info.IsOpenShift() {
-		return -1, errors.New("There is no OpenShift platform detected.")
+		return -1, errors.New("There is no OpenShift platform found.")
 	}
 	curVersion := MapKnownVersion(info)
-	return curVersion.Compare(OpenShiftVersion{Version: version})
+	return OpenShiftVersion{Version: version}.Compare(curVersion), nil
+}
+
+func (pv K8SBasedPlatformVersioner) GetOpenShiftVersion() (string, error) {
+	info, err := pv.GetPlatformInfo(nil, nil)
+	if err != nil {
+		return "", errors.New("There is no OpenShift platform found.")
+	}
+	return MapKnownVersion(info).Version, nil
 }
