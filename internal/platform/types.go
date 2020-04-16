@@ -2,7 +2,7 @@ package platform
 
 import (
 	"fmt"
-	"strconv"
+	"golang.org/x/mod/semver"
 	"strings"
 )
 
@@ -47,15 +47,23 @@ type OpenShiftVersion struct {
 }
 
 func (info OpenShiftVersion) MajorVersion() string {
-	return strings.Split(info.Version, ".")[0]
+	return semver.Major(info.Version)
 }
 
 func (info OpenShiftVersion) MinorVersion() string {
-	return strings.Split(info.Version, ".")[1]
+	ver := semver.MajorMinor(info.Version)
+	if ver != "" {
+		return strings.Split(info.Version, ".")[1]
+	}
+	return ""
+}
+
+func (info OpenShiftVersion) PrereleaseVersion() string {
+	return semver.Prerelease(info.Version)
 }
 
 func (info OpenShiftVersion) BuildVersion() string {
-	return strings.Join(strings.Split(info.Version, ".")[2:], ".")
+	return semver.Build(info.Version)
 }
 
 func (info OpenShiftVersion) String() string {
@@ -63,32 +71,8 @@ func (info OpenShiftVersion) String() string {
 		"Version: " + info.Version + "]"
 }
 
-func (v OpenShiftVersion) Compare(o OpenShiftVersion) (int, error) {
-	if d, err := compareSegment(v.MajorVersion(), o.MajorVersion()); d != 0 {
-		return d, err
-	}
-	if d, err := compareSegment(v.MinorVersion(), o.MinorVersion()); d != 0 {
-		return d, err
-	}
-	return 0, nil
-}
-
-func compareSegment(v, o string) (int, error) {
-	v1, err := strconv.Atoi(v)
-	if err != nil {
-		return -1, err
-	}
-	v2, err := strconv.Atoi(o)
-	if err != nil {
-		return -1, err
-	}
-	if v1 < v2 {
-		return -1, nil
-	}
-	if v1 > v2 {
-		return 1, nil
-	}
-	return 0, nil
+func (v OpenShiftVersion) Compare(o OpenShiftVersion) int {
+	return semver.Compare(v.Version, o.Version)
 }
 
 // full generated 'version' API fetch result struct @

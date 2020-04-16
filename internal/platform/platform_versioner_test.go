@@ -141,8 +141,8 @@ func TestClientCallVersionComparsion(t *testing.T) {
 	testcases := []struct {
 		label        string
 		discoverer   Discoverer
-		config       *rest.Config
-		expectedInfo  int
+		config       []*rest.Config
+		expectedInfo int
 		expectedErr  bool
 	}{
 		{
@@ -157,7 +157,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
 				},
 			},
-			config:       &rest.Config{},
+			config:       []*rest.Config{&rest.Config{}},
 			expectedInfo: 0,
 			expectedErr:  false,
 		},
@@ -173,7 +173,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
 				},
 			},
-			config:       &rest.Config{},
+			config:       []*rest.Config{&rest.Config{}},
 			expectedInfo: 0,
 			expectedErr:  false,
 		},
@@ -189,7 +189,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
 				},
 			},
-			config:       &rest.Config{},
+			config:       []*rest.Config{&rest.Config{}},
 			expectedInfo: -1,
 			expectedErr:  false,
 		},
@@ -205,20 +205,60 @@ func TestClientCallVersionComparsion(t *testing.T) {
 					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
 				},
 			},
-			config:       &rest.Config{},
+			config:       []*rest.Config{&rest.Config{}},
 			expectedInfo: -1,
-			expectedErr:  true,
+			expectedErr:  false,
+		},
+		{
+			label: "case 5",
+			discoverer: FakeDiscoverer{
+				serverInfo: &version.Info{
+					Major: "1",
+					Minor: "10",
+				},
+				groupList: &v1.APIGroupList{
+					TypeMeta: v1.TypeMeta{},
+					Groups:   []v1.APIGroup{{Name: "route.openshift.io"}},
+				},
+			},
+			config:       []*rest.Config{&rest.Config{}},
+			expectedInfo: -1,
+			expectedErr:  false,
 		},
 	}
 
-	versionToTest := "4.3"
+	versionToTest := "v4.3"
 	for _, tc := range testcases {
-		res, err := pv.CompareOpenShiftVersion(tc.discoverer, tc.config, versionToTest)
+		res, err := pv.CompareOpenShiftVersions(tc.discoverer, versionToTest, tc.config)
 		if tc.expectedErr {
-			assert.Error(t, err, "expected error")
+			assert.Error(t, err, "expected error-"+tc.label)
 		} else {
-			assert.NoError(t, err, "unexpected error")
+			assert.NoError(t, err, "unexpected error-"+tc.label)
 		}
-		assert.Equal(t, tc.expectedInfo, res, "The expected and actual versions should be the same.")
+		assert.Equal(t, tc.expectedInfo, res, "The expected and actual versions should be the same."+tc.label)
 	}
+}
+
+func TestCompareVersions(t *testing.T) {
+	pv := K8SBasedPlatformVersioner{}
+
+	//v4.03 -> ""
+	res := pv.CompareVersions("v4.3", "v4.03")
+	assert.Equal(t, 1, res)
+
+	res = pv.CompareVersions("v4.3", "v4.3")
+	assert.Equal(t, 0, res)
+
+	res = pv.CompareVersions("v4.3", "v4.1")
+	assert.Equal(t, 1, res)
+
+	res = pv.CompareVersions("v4.3", "v4.4")
+	assert.Equal(t, -1, res)
+
+	// "" vs ""
+	res = pv.CompareVersions("", "v4.03")
+	assert.Equal(t, 0, res)
+
+	res = pv.CompareVersions("v4.3", "")
+	assert.Equal(t, 1, res)
 }

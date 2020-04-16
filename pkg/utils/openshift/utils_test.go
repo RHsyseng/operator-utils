@@ -21,17 +21,17 @@ func TestOpenShiftVersion_MapKnownVersion(t *testing.T) {
 		{
 			label:              "case 2",
 			info:               platform.PlatformInfo{K8SVersion: "1.10+"},
-			expectedOCPVersion: "3.10",
+			expectedOCPVersion: "v3.10",
 		},
 		{
 			label:              "case 3",
 			info:               platform.PlatformInfo{K8SVersion: "1.11+"},
-			expectedOCPVersion: "3.11",
+			expectedOCPVersion: "v3.11",
 		},
 		{
 			label:              "case 4",
 			info:               platform.PlatformInfo{K8SVersion: "1.13+"},
-			expectedOCPVersion: "4.1",
+			expectedOCPVersion: "v4.1",
 		},
 	}
 
