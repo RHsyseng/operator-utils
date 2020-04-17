@@ -35,7 +35,7 @@ Accepts <nil> or instantiated 'cfg' rest config parameter.
 
 Result: OpenShiftVersion{ Version: 4.1.2 }
 */
-func LookupOpenShiftVersion(cfg *rest.Config) (platform.OpenShiftVersion, error) {
+func LookupOpenShiftVersion(cfg *rest.Config) (OpenShiftVersion, error) {
 	return platform.K8SBasedPlatformVersioner{}.LookupOpenShiftVersion(nil, cfg)
 }
 
@@ -70,6 +70,6 @@ MapKnownVersion maps from K8S version of PlatformInfo to equivalent OpenShift ve
 
 Result: OpenShiftVersion{ Version: v4.1 }
 */
-func MapKnownVersion(info platform.PlatformInfo) platform.OpenShiftVersion {
-	return platform.MapKnownVersion(info)
+func MapKnownVersion(info platform.PlatformInfo) OpenShiftVersion {
+	return K8SOpenshiftVersionMap(info)
 }

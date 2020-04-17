@@ -2,7 +2,6 @@ package platform
 
 import (
 	"fmt"
-	"golang.org/x/mod/semver"
 	"strings"
 )
 
@@ -40,39 +39,6 @@ func (info PlatformInfo) String() string {
 		"Name: " + fmt.Sprintf("%v", info.Name) +
 		", K8SVersion: " + info.K8SVersion +
 		", OS: " + info.OS + "]"
-}
-
-type OpenShiftVersion struct {
-	Version string `json:"ocpVersion"`
-}
-
-func (info OpenShiftVersion) MajorVersion() string {
-	return semver.Major(info.Version)
-}
-
-func (info OpenShiftVersion) MinorVersion() string {
-	ver := semver.MajorMinor(info.Version)
-	if ver != "" {
-		return strings.Split(info.Version, ".")[1]
-	}
-	return ""
-}
-
-func (info OpenShiftVersion) PrereleaseVersion() string {
-	return semver.Prerelease(info.Version)
-}
-
-func (info OpenShiftVersion) BuildVersion() string {
-	return semver.Build(info.Version)
-}
-
-func (info OpenShiftVersion) String() string {
-	return "OpenShiftVersion [" +
-		"Version: " + info.Version + "]"
-}
-
-func (v OpenShiftVersion) Compare(o OpenShiftVersion) int {
-	return semver.Compare(v.Version, o.Version)
 }
 
 // full generated 'version' API fetch result struct @

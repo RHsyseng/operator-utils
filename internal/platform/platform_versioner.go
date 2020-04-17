@@ -3,6 +3,7 @@ package platform
 import (
 	"encoding/json"
 	"errors"
+	"github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	openapi_v2 "github.com/googleapis/gnostic/OpenAPIv2"
 	"golang.org/x/mod/semver"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,26 +32,6 @@ type Discoverer interface {
 
 type K8SBasedPlatformVersioner struct{}
 
-/*
-MapKnownVersion maps from K8S version of PlatformInfo to equivalent OpenShift version
-
-Result: OpenShiftVersion{ Version: 4.1.2 }
-*/
-func MapKnownVersion(info PlatformInfo) OpenShiftVersion {
-	k8sToOcpMap := map[string]string{
-		"1.10+": "v3.10",
-		"1.10":  "v3.10",
-		"1.11+": "v3.11",
-		"1.11":  "v3.11",
-		"1.13+": "v4.1",
-		"1.13":  "v4.1",
-		"1.14+": "v4.2",
-		"1.14":  "v4.2",
-		"1.16+": "v4.3",
-		"1.16":  "v4.3",
-	}
-	return OpenShiftVersion{Version: semver.MajorMinor(k8sToOcpMap[info.K8SVersion])}
-}
 
 // deal with cfg coming from legacy method signature and allow injection for client testing
 func (K8SBasedPlatformVersioner) DefaultArgs(client Discoverer, cfg *rest.Config) (Discoverer, *rest.Config, error) {
@@ -112,9 +93,9 @@ func (pv K8SBasedPlatformVersioner) GetPlatformInfo(client Discoverer, cfg *rest
 OCP4.1+ requires elevated cluster configuration user security permissions for version fetch
 REST call URL requiring permissions: /apis/config.openshift.io/v1/clusterversions
 */
-func (pv K8SBasedPlatformVersioner) LookupOpenShiftVersion(client Discoverer, cfg *rest.Config) (OpenShiftVersion, error) {
+func (pv K8SBasedPlatformVersioner) LookupOpenShiftVersion(client Discoverer, cfg *rest.Config) (openshift.OpenShiftVersion, error) {
 
-	osv := OpenShiftVersion{}
+	osv := openshift.OpenShiftVersion{}
 	client, _, err := pv.DefaultArgs(nil, nil)
 	if err != nil {
 		log.Info("issue occurred while defaulting args for version lookup")
@@ -175,10 +156,10 @@ func (pv K8SBasedPlatformVersioner) CompareOpenShiftVersions(client Discoverer, 
 	if !info.IsOpenShift() {
 		return -1, errors.New("There is no OpenShift platform detected.")
 	}
-	curVersion := MapKnownVersion(info)
-	return curVersion.Compare(OpenShiftVersion{Version: version}), nil
+	curVersion := openshift.K8SOpenshiftVersionMap(info)
+	return curVersion.Compare(openshift.OpenShiftVersion{Version: version}), nil
 }
 
 func (pv K8SBasedPlatformVersioner) CompareVersions(version1 string, version2 string) int {
-	return OpenShiftVersion{Version: version1}.Compare(OpenShiftVersion{Version: version2});
+	return openshift.OpenShiftVersion{Version: version1}.Compare(openshift.OpenShiftVersion{Version: version2});
 }

@@ -1,6 +1,7 @@
-package platform
+package openshift
 
 import (
+	"github.com/RHsyseng/operator-utils/internal/platform"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -18,7 +19,7 @@ func TestK8SVersionHelpers(t *testing.T) {
 
 	for _, v := range ocpTestVersions {
 
-		info := PlatformInfo{K8SVersion: v.version}
+		info := platform.PlatformInfo{K8SVersion: v.version}
 		assert.Equal(t, v.major, info.K8SMajorVersion(), "K8SMajorVersion mismatch")
 		assert.Equal(t, v.minor, info.K8SMinorVersion(), "K8SMinorVersion mismatch")
 	}
@@ -26,7 +27,7 @@ func TestK8SVersionHelpers(t *testing.T) {
 
 func TestPlatformInfo_String(t *testing.T) {
 
-	info := PlatformInfo{Name: OpenShift, K8SVersion: "456", OS: "foo/bar"}
+	info := platform.PlatformInfo{Name: platform.OpenShift, K8SVersion: "456", OS: "foo/bar"}
 
 	assert.Equal(t, "PlatformInfo [Name: OpenShift, K8SVersion: 456, OS: foo/bar]",
 		info.String(), "PlatformInfo String() yields malformed result of %s", info.String())
