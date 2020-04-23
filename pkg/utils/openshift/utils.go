@@ -56,3 +56,4 @@ Result: OpenShiftVersion{ Version: 4.1.2 }
 func MapKnownVersion(info platform.PlatformInfo) platform.OpenShiftVersion {
 	return platform.MapKnownVersion(info)
 }
+
