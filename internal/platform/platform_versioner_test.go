@@ -142,7 +142,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 		label        string
 		discoverer   Discoverer
 		config       *rest.Config
-		expectedInfo  int
+		expectedInfo int
 		expectedErr  bool
 	}{
 		{
