@@ -3,14 +3,15 @@ package read
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"testing"
+
 	monv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 var namespace = "ns"
@@ -24,14 +25,17 @@ func TestListObjects(t *testing.T) {
 	client := fake.NewFakeClientWithScheme(scheme)
 	services := getServices(2)
 	for index := range services {
+		services[index].ResourceVersion = ""
 		assert.Nil(t, client.Create(context.TODO(), &services[index]), "Expect no errors mock creating objects")
 	}
 	pods := getPods(3)
 	for index := range pods {
+		pods[index].ResourceVersion = ""
 		assert.Nil(t, client.Create(context.TODO(), &pods[index]), "Expect no errors mock creating objects")
 	}
 	serviceMonitors := getServiceMonitors(2)
 	for index := range serviceMonitors {
+		serviceMonitors[index].ResourceVersion = ""
 		assert.Nil(t, client.Create(context.TODO(), &serviceMonitors[index]), "Expect no errors mock creating objects")
 	}
 
@@ -66,6 +70,7 @@ func TestLoadObject(t *testing.T) {
 	assert.Nil(t, err, "Expect no errors building scheme")
 	client := fake.NewFakeClientWithScheme(scheme)
 	service := getServices(1)[0]
+	service.ResourceVersion = ""
 	assert.Nil(t, client.Create(context.TODO(), &service), "Expect no errors mock creating object")
 
 	reader := New(client).WithNamespace(namespace)

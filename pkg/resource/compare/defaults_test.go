@@ -2,6 +2,9 @@ package compare
 
 import (
 	"fmt"
+	"reflect"
+	"testing"
+
 	utils "github.com/RHsyseng/operator-utils/pkg/resource/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	obuildv1 "github.com/openshift/api/build/v1"
@@ -9,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"reflect"
-	"testing"
 )
 
 func TestCompareRoutes(t *testing.T) {
