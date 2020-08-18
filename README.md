@@ -6,28 +6,30 @@
 This library layers on top of the Operator SDK, having set of utilities function as a library to easily create Kubernetes operators.
 
 ## Kubernetes / OpenShift Version Support
-The operator-utils project aims to support the 2 most recent OpenShift minor versions:
 
-- [main](https://github.com/RHsyseng/operator-utils/tree/main) branch currently supports K8S 1.13 / OCP 4.2
-- For K8S 1.14 support, please refer to [k8s-1.14](https://github.com/RHsyseng/operator-utils/tree/k8s-1.14) branch
-- For K8S 1.16 / OpenShift 4.3 support, please refer to [k8s1.16_ocp4.3](https://github.com/RHsyseng/operator-utils/tree/k8s1.16_ocp4.3) branch
-- For K8S 1.17 / OpenShift 4.4 support, please refer to [k8s1.17_ocp4.4](https://github.com/RHsyseng/operator-utils/tree/k8s1.17_ocp4.4) branch
-- For K8S 1.18 / OpenShift 4.5 support, please refer to [k8s1.18_ocp4.5](https://github.com/RHsyseng/operator-utils/tree/k8s1.18_ocp4.5) branch
+In July of 2020, our team [moved away from using the term `master`](https://www.redhat.com/en/blog/making-open-source-more-inclusive-eradicating-problematic-language) for our default branch. As a result, our branching scheme is as follows:
+- The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch currently supports **OCP 4.5** (K8S 1.18), the latest GA release.
+- The [next](https://github.com/RHsyseng/operator-utils/tree/next) branch currently supports **OCP 4.6** (K8S 1.19).
+- For versions of `operator-utils` targeting earlier releases of OCP (starting with 4.2), please refer to the [tags](https://github.com/RHsyseng/operator-utils/tags) section.
+  - tag `v1.X.Y` indicates support for OCP `vX.Y`
+- With each General Availability release of OCP, the `main` branch will be given a tag matching the previously supported OCP version in `main`, then the `next` branch will be rebased onto `main`.
 
+
+## Contributing to the `operator-utils` Project
+
+All bugs, tasks, fixes or enhancements should be tracked as [GitHub Issues](https://github.com/RHsyseng/operator-utils/issues) & [Pull Requests](https://github.com/RHsyseng/operator-utils/pulls).
+
+- To contribute features targeting **OCP 4.5** only, use a local feature branch based off of & targeting `origin/main` with any PR's. Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.6** only, use a local feature branch based off of & targeting `origin/next` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **both currently supported versions**, first complete the commit/PR work targeting `next`. Once that PR is merged to `next`, create a new PR with cherry-pick of the commit targeting `main`.
+- Contributions targeting OCP versions older than what's currently supported by `main` will typically no longer be accepted. Please contact contributors for further discussion. 
 
 ## Declaring operator-utils dependency
 
 
 Regardless of dependency framework, we suggest following the best practice of declaring any and all dependencies your project utilizes regardless of target branch, tag, or revision. 
 
-With regards to operator-utils, please **carefully** consider the given version support information above when declaring your dependency, as depending on or defaulting to master branch will likely result in future build complications as our project continues to evolve and cycle minor version support.   
-
-- Dep example specifying **REVISION**:
-```
-[[constraint]]
-  name = "github.com/RHsyseng/operator-utils"
-  revision = "232650febd728455482b3c780c79a9ac0be62b50"
-```
+With regards to `operator-utils`, please **carefully** consider the given version support information above when declaring your dependency, as depending on or defaulting to `main` branch will likely result in future build complications as our project continues to evolve and cycle minor version support.   
 
 - Go.mod example specifying **REVISION**:
 ```
@@ -237,5 +239,3 @@ operator-utils is used by several Red Hat product & community operators, includi
 - [Teiid Operator](https://github.com/teiid/teiid-operator)
 - [Wildfly Operator](https://github.com/wildfly/wildfly-operator)
 
-## Contributing
-All bugs, tasks, fixes or enhancements should be tracked as [GitHub Issues](https://github.com/RHsyseng/operator-utils/issues) & [Pull Requests](https://github.com/RHsyseng/operator-utils/pulls).
