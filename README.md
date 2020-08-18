@@ -8,7 +8,7 @@ This library layers on top of the Operator SDK, having set of utilities function
 ## Kubernetes / OpenShift Version Support
 The operator-utils project aims to support the 2 most recent OpenShift minor versions:
 
-- [master](https://github.com/RHsyseng/operator-utils/tree/master) branch currently supports K8S 1.13 / OCP 4.2
+- [main](https://github.com/RHsyseng/operator-utils/tree/main) branch currently supports K8S 1.13 / OCP 4.2
 - For K8S 1.14 support, please refer to [k8s-1.14](https://github.com/RHsyseng/operator-utils/tree/k8s-1.14) branch
 - For K8S 1.16 / OpenShift 4.3 support, please refer to [k8s1.16_ocp4.3](https://github.com/RHsyseng/operator-utils/tree/k8s1.16_ocp4.3) branch
 - For K8S 1.17 / OpenShift 4.4 support, please refer to [k8s1.17_ocp4.4](https://github.com/RHsyseng/operator-utils/tree/k8s1.17_ocp4.4) branch
