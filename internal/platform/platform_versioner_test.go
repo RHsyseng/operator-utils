@@ -3,7 +3,7 @@ package platform
 import (
 	"testing"
 
-	openapi_v2 "github.com/googleapis/gnostic/OpenAPIv2"
+	openapi_v2 "github.com/googleapis/gnostic/openapiv2"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -150,7 +150,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 			discoverer: FakeDiscoverer{
 				serverInfo: &version.Info{
 					Major: "1",
-					Minor: "18",
+					Minor: "19",
 				},
 				groupList: &v1.APIGroupList{
 					TypeMeta: v1.TypeMeta{},
@@ -166,7 +166,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 			discoverer: FakeDiscoverer{
 				serverInfo: &version.Info{
 					Major: "1",
-					Minor: "18+",
+					Minor: "19+",
 				},
 				groupList: &v1.APIGroupList{
 					TypeMeta: v1.TypeMeta{},
@@ -211,7 +211,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 		},
 	}
 
-	versionToTest := "4.5"
+	versionToTest := "4.6"
 	for _, tc := range testcases {
 		res, err := pv.CompareOpenShiftVersion(tc.discoverer, tc.config, versionToTest)
 		if tc.expectedErr {
