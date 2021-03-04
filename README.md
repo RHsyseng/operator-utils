@@ -223,6 +223,7 @@ operator-utils is used by several Red Hat product & community operators, includi
 - [ActiveMQ Artemis Broker Test Suite](https://github.com/artemiscloud/openshift-broker-test-suite)
 - [AtlasMap Operator](https://github.com/atlasmap/atlasmap-operator)
 - [Barometer Operator](https://github.com/aneeshkp/barometer-operator)
+- [Infinispan Operator](https://github.com/infinispan/infinispan-operator)
 - [Integreatly Operator](https://github.com/integr8ly/integreatly-operator)
 - [Kie Cloud Operator](https://github.com/kiegroup/kie-cloud-operator)
 - [Kogito Operator](https://github.com/kiegroup/kogito-cloud-operator)
