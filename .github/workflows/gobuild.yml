@@ -1,0 +1,26 @@
+name: Go
+
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+    branches: [main, next]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Format
+        run: |
+          make format
+          git diff --exit-code */**/*.go
+      - name: Vet
+        run: go vet ./...
+      - name: Unit tests
+        run: go test ./...
