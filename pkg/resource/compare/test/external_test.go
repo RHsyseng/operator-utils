@@ -1,13 +1,13 @@
 package test
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 )
 
@@ -90,11 +90,11 @@ func TestCompareCombined(t *testing.T) {
 
 	serviceType := reflect.TypeOf(corev1.Service{})
 	dcType := reflect.TypeOf(oappsv1.DeploymentConfig{})
-	deployed := map[reflect.Type][]resource.KubernetesResource{
+	deployed := map[reflect.Type][]client.Object{
 		dcType:      {&dc1a, &dc2a, &dc3a},
 		serviceType: {&service1a, &service2a, &service3a},
 	}
-	requested := map[reflect.Type][]resource.KubernetesResource{
+	requested := map[reflect.Type][]client.Object{
 		dcType:      {&dc1b, &dc2b, &dc4b},
 		serviceType: {&service1b, &service2b, &service4b},
 	}
