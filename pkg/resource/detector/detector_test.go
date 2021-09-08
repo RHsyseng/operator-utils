@@ -23,7 +23,7 @@ func TestDetectorDetects(t *testing.T) {
 	}
 
 	// run very frequently, for faster tests
-	d.Start(1 * time.Nanosecond)
+	d.Start(10 * time.Nanosecond)
 	d.AddCRDTrigger(&appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "deployment",
@@ -35,21 +35,21 @@ func TestDetectorDetects(t *testing.T) {
 	})
 
 	//wait a few intervals
-	time.Sleep(2 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
 	if crdDiscovered {
 		t.Fatalf("CRD Discovered too early")
 	}
 
 	dc.Resources = []*metav1.APIResourceList{
-		&metav1.APIResourceList{
+		{
 			TypeMeta:     metav1.TypeMeta{},
 			GroupVersion: "apps/v1",
 			APIResources: []metav1.APIResource{{Kind: "deployment"}},
 		},
 	}
 
-	time.Sleep(2 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	if !crdDiscovered {
 		t.Fatalf("CRD not discovered correctly")
 	}

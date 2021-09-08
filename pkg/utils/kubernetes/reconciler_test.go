@@ -3,12 +3,10 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/RHsyseng/operator-utils/pkg/test"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -16,30 +14,30 @@ import (
 )
 
 type MockReconciler struct {
-	ReconcileFn func(request reconcile.Request) (reconcile.Result, error)
+	ReconcileFn func(context context.Context, request reconcile.Request) (reconcile.Result, error)
 }
 
-func (r *MockReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *MockReconciler) Reconcile(context context.Context, request reconcile.Request) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
 type MockFinalizer struct {
 	name         string
-	onFinalizeFn func(owner resource.KubernetesResource, service PlatformService) error
+	onFinalizeFn func(owner client.Object, service PlatformService) error
 }
 
 func (m *MockFinalizer) GetName() string {
 	return m.name
 }
 
-func (m *MockFinalizer) OnFinalize(owner resource.KubernetesResource, service PlatformService) error {
+func (m *MockFinalizer) OnFinalize(owner client.Object, service PlatformService) error {
 	if m.onFinalizeFn == nil {
 		return nil
 	}
 	return m.onFinalizeFn(owner, service)
 }
 
-func (m *MockFinalizer) setOnFinalizeFn(onFinalizeFn func(owner resource.KubernetesResource, service PlatformService) error) {
+func (m *MockFinalizer) setOnFinalizeFn(onFinalizeFn func(owner client.Object, service PlatformService) error) {
 	m.onFinalizeFn = onFinalizeFn
 }
 
@@ -165,7 +163,7 @@ func TestExtendedReconciler_FinalizeOnDeleteErrorOnFinalize(t *testing.T) {
 	extReconciler := BuildTestExtendedReconciler()
 	extReconciler.Finalizers = map[string]Finalizer{
 		"f1": &MockFinalizer{
-			onFinalizeFn: func(owner resource.KubernetesResource, service PlatformService) error {
+			onFinalizeFn: func(owner client.Object, service PlatformService) error {
 				return fmt.Errorf("Foo error")
 			},
 		},
@@ -193,7 +191,7 @@ func TestExtendedReconciler_FinalizeOnDeleteErrorOnFinalize(t *testing.T) {
 
 func TestExtendedReconciler_FinalizeOnDeleteErrorOnUpdate(t *testing.T) {
 	mockService := BuildMockPlatformService()
-	mockService.UpdateFunc = func(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error {
+	mockService.UpdateFunc = func(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
 		return fmt.Errorf("Foo error")
 	}
 	extReconciler := BuildTestExtendedReconciler()
@@ -225,11 +223,11 @@ func TestExtendedReconciler_FinalizeOnDeleteErrorOnUpdate(t *testing.T) {
 func TestExtendedReconciler_Reconcile(t *testing.T) {
 	extReconciler := BuildTestExtendedReconciler()
 	var f1Invoked, f2Invoked bool
-	f1 := MockFinalizer{name: "f1", onFinalizeFn: func(owner resource.KubernetesResource, service PlatformService) error {
+	f1 := MockFinalizer{name: "f1", onFinalizeFn: func(owner client.Object, service PlatformService) error {
 		f1Invoked = true
 		return nil
 	}}
-	f2 := MockFinalizer{name: "f2", onFinalizeFn: func(owner resource.KubernetesResource, service PlatformService) error {
+	f2 := MockFinalizer{name: "f2", onFinalizeFn: func(owner client.Object, service PlatformService) error {
 		f2Invoked = true
 		return nil
 	}}
