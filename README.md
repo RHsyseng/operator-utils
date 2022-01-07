@@ -8,8 +8,8 @@ This library layers on top of the Operator SDK, having set of utilities function
 ## Kubernetes / OpenShift Version Support
 
 In July of 2020, our team [moved away from using the term `master`](https://www.redhat.com/en/blog/making-open-source-more-inclusive-eradicating-problematic-language) for our default branch. As a result, our branching scheme is as follows:
-- The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch currently supports **OCP 4.5** (K8S 1.18), the latest GA release.
-- The [next](https://github.com/RHsyseng/operator-utils/tree/next) branch currently supports **OCP 4.6** (K8S 1.19).
+- The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch currently supports **OCP 4.7** (K8S 1.20), the latest GA release.
+- The [next](https://github.com/RHsyseng/operator-utils/tree/next) branch currently supports **OCP 4.8** (K8S 1.21).
 - For versions of `operator-utils` targeting earlier releases of OCP (starting with 4.2), please refer to the [tags](https://github.com/RHsyseng/operator-utils/tags) section.
   - tag `v1.X.Y` indicates support for OCP `vX.Y`
 - With each General Availability release of OCP, the `main` branch will be given a tag matching the previously supported OCP version in `main`, then the `next` branch will be rebased onto `main`.
