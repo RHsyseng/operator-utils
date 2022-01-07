@@ -2,34 +2,35 @@ package write
 
 import (
 	"context"
-	"github.com/RHsyseng/operator-utils/pkg/resource"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
 )
 
 func TestFluentAPI(t *testing.T) {
 	scheme := getScheme(t)
-	noOwnership := New(fake.NewFakeClientWithScheme(scheme))
+
+	noOwnership := New(fake.NewClientBuilder().WithScheme(scheme).Build())
 	assert.Nil(t, noOwnership.ownerRefs, "Do not expect ownerRefs to be set")
 	assert.Nil(t, noOwnership.ownerController, "Do not expect ownerController to be set")
 
-	ownerRefs := New(fake.NewFakeClientWithScheme(scheme)).WithOwnerController(&corev1.Service{}, scheme)
+	ownerRefs := New(fake.NewClientBuilder().WithScheme(scheme).Build()).WithOwnerController(&corev1.Service{}, scheme)
 	assert.Nil(t, ownerRefs.ownerRefs, "Do not expect ownerRefs to be set")
 	assert.NotNil(t, ownerRefs.ownerController, "Expect ownerController to be set")
 
-	controler := New(fake.NewFakeClientWithScheme(scheme)).WithOwnerReferences(v1.OwnerReference{})
+	controler := New(fake.NewClientBuilder().WithScheme(scheme).Build()).WithOwnerReferences(v1.OwnerReference{})
 	assert.NotNil(t, controler.ownerRefs, "Expect ownerRefs to be set")
 	assert.Nil(t, controler.ownerController, "Do not expect ownerController to be set")
 }
 
 func TestCreateService(t *testing.T) {
 	scheme := getScheme(t)
-	client := fake.NewFakeClientWithScheme(scheme)
+	cli := fake.NewClientBuilder().WithScheme(scheme).Build()
 	requestedService := corev1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "service1",
@@ -40,12 +41,12 @@ func TestCreateService(t *testing.T) {
 		},
 	}
 	requestedService.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-	added, err := New(client).AddResources([]resource.KubernetesResource{&requestedService})
+	added, err := New(cli).AddResources([]client.Object{&requestedService})
 	assert.Nil(t, err, "Expect no errors creating a simple object")
 	assert.True(t, added, "Object should be added")
 
 	existingService := corev1.Service{}
-	err = client.Get(context.TODO(), types.NamespacedName{Name: "service1", Namespace: "namespace"}, &existingService)
+	err = cli.Get(context.TODO(), types.NamespacedName{Name: "service1", Namespace: "namespace"}, &existingService)
 	assert.Nil(t, err, "Expect no errors loading existing object")
 	assert.Equal(t, requestedService, existingService)
 }
@@ -53,7 +54,7 @@ func TestCreateService(t *testing.T) {
 func TestUpdateService(t *testing.T) {
 	scheme := getScheme(t)
 	clusterIP := "1.2.3.4"
-	client := fake.NewFakeClientWithScheme(scheme)
+	cli := fake.NewClientBuilder().WithScheme(scheme).Build()
 	requestedService := corev1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "service1",
@@ -65,7 +66,7 @@ func TestUpdateService(t *testing.T) {
 		},
 	}
 	requestedService.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-	added, err := New(client).AddResources([]resource.KubernetesResource{&requestedService})
+	added, err := New(cli).AddResources([]client.Object{&requestedService})
 	assert.Nil(t, err, "Expect no errors creating a simple object")
 	assert.True(t, added, "Object should be added")
 
@@ -79,12 +80,12 @@ func TestUpdateService(t *testing.T) {
 		},
 	}
 	updatedService.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("Service"))
-	updated, err := New(client).UpdateResources([]resource.KubernetesResource{&requestedService}, []resource.KubernetesResource{&updatedService})
+	updated, err := New(cli).UpdateResources([]client.Object{&requestedService}, []client.Object{&updatedService})
 	assert.Nil(t, err, "Expect no errors updating object")
 	assert.True(t, updated, "Object should be updated")
 
 	existingService := corev1.Service{}
-	err = client.Get(context.TODO(), types.NamespacedName{Name: "service1", Namespace: "namespace"}, &existingService)
+	err = cli.Get(context.TODO(), types.NamespacedName{Name: "service1", Namespace: "namespace"}, &existingService)
 	assert.Nil(t, err, "Expect no errors loading existing object")
 	//Update call should set the existing ClusterIP on the object before writing it:
 	updatedService.Spec.ClusterIP = clusterIP
