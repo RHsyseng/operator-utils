@@ -399,6 +399,17 @@ func equalServices(deployed client.Object, requested client.Object) bool {
 	if service2.Spec.SessionAffinity == "" {
 		service1.Spec.SessionAffinity = ""
 	}
+
+	if len(service2.Spec.ClusterIPs) == 0 {
+		service1.Spec.ClusterIPs = nil
+	}
+	if len(service2.Spec.IPFamilies) == 0 {
+		service1.Spec.IPFamilies = nil
+	}
+	if service2.Spec.IPFamilyPolicy == nil {
+		service1.Spec.IPFamilyPolicy = nil
+	}
+
 	for _, port2 := range service2.Spec.Ports {
 		if found, port1 := findServicePort(port2, service1.Spec.Ports); found {
 			if port2.Protocol == "" {
