@@ -19,8 +19,8 @@ In July of 2020, our team [moved away from using the term `master`](https://www.
 
 All bugs, tasks, fixes or enhancements should be tracked as [GitHub Issues](https://github.com/RHsyseng/operator-utils/issues) & [Pull Requests](https://github.com/RHsyseng/operator-utils/pulls).
 
-- To contribute features targeting **OCP 4.6** only, use a local feature branch based off of & targeting `origin/main` with any PR's. Reference any JIRA/GitHub issues in PR's where applicable.
-- To contribute features targeting **OCP 4.7** only, use a local feature branch based off of & targeting `origin/next` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.7** only, use a local feature branch based off of & targeting `origin/main` with any PR's. Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.9** only, use a local feature branch based off of & targeting `origin/next` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
 - To contribute features targeting **both currently supported versions**, first complete the commit/PR work targeting `next`. Once that PR is merged to `next`, create a new PR with cherry-pick of the commit targeting `main`.
 - Contributions targeting OCP versions older than what's currently supported by `main` will typically no longer be accepted. Please contact contributors for further discussion. 
 
