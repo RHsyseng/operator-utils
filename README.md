@@ -9,7 +9,7 @@ This library layers on top of the Operator SDK, having set of utilities function
 
 In July of 2020, our team [moved away from using the term `master`](https://www.redhat.com/en/blog/making-open-source-more-inclusive-eradicating-problematic-language) for our default branch. As a result, our branching scheme is as follows:
 - The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch currently supports **OCP 4.7** (K8S 1.20), the latest GA release.
-- The [next](https://github.com/RHsyseng/operator-utils/tree/next) branch currently supports **OCP 4.8** (K8S 1.21).
+- The [next](https://github.com/RHsyseng/operator-utils/tree/next) branch currently supports **OCP 4.9** (K8S 1.21).
 - For versions of `operator-utils` targeting earlier releases of OCP (starting with 4.2), please refer to the [tags](https://github.com/RHsyseng/operator-utils/tags) section.
   - tag `v1.X.Y` indicates support for OCP `vX.Y`
 - With each General Availability release of OCP, the `main` branch will be given a tag matching the previously supported OCP version in `main`, then the `next` branch will be rebased onto `main`.
@@ -19,8 +19,8 @@ In July of 2020, our team [moved away from using the term `master`](https://www.
 
 All bugs, tasks, fixes or enhancements should be tracked as [GitHub Issues](https://github.com/RHsyseng/operator-utils/issues) & [Pull Requests](https://github.com/RHsyseng/operator-utils/pulls).
 
-- To contribute features targeting **OCP 4.5** only, use a local feature branch based off of & targeting `origin/main` with any PR's. Reference any JIRA/GitHub issues in PR's where applicable.
-- To contribute features targeting **OCP 4.6** only, use a local feature branch based off of & targeting `origin/next` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.7** only, use a local feature branch based off of & targeting `origin/main` with any PR's. Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.9** only, use a local feature branch based off of & targeting `origin/next` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
 - To contribute features targeting **both currently supported versions**, first complete the commit/PR work targeting `next`. Once that PR is merged to `next`, create a new PR with cherry-pick of the commit targeting `main`.
 - Contributions targeting OCP versions older than what's currently supported by `main` will typically no longer be accepted. Please contact contributors for further discussion. 
 
@@ -223,6 +223,7 @@ operator-utils is used by several Red Hat product & community operators, includi
 - [ActiveMQ Artemis Broker Test Suite](https://github.com/artemiscloud/openshift-broker-test-suite)
 - [AtlasMap Operator](https://github.com/atlasmap/atlasmap-operator)
 - [Barometer Operator](https://github.com/aneeshkp/barometer-operator)
+- [Infinispan Operator](https://github.com/infinispan/infinispan-operator)
 - [Integreatly Operator](https://github.com/integr8ly/integreatly-operator)
 - [Kie Cloud Operator](https://github.com/kiegroup/kie-cloud-operator)
 - [Kogito Operator](https://github.com/kiegroup/kogito-cloud-operator)
