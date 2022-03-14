@@ -8,8 +8,8 @@ This library layers on top of the Operator SDK, having set of utilities function
 ## Kubernetes / OpenShift Version Support
 
 In July of 2020, our team [moved away from using the term `master`](https://www.redhat.com/en/blog/making-open-source-more-inclusive-eradicating-problematic-language) for our default branch. As a result, our branching scheme is as follows:
-- The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch currently supports **OCP 4.7** (K8S 1.20), the latest GA release.
-- The [next](https://github.com/RHsyseng/operator-utils/tree/next) branch currently supports **OCP 4.9** (K8S 1.21).
+- The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch currently supports **OCP 4.9** (K8S 1.22), the latest GA release.
+- The [next](https://github.com/RHsyseng/operator-utils/tree/next) branch currently supports **OCP 4.10** (K8S 1.23).
 - For versions of `operator-utils` targeting earlier releases of OCP (starting with 4.2), please refer to the [tags](https://github.com/RHsyseng/operator-utils/tags) section.
   - tag `v1.X.Y` indicates support for OCP `vX.Y`
 - With each General Availability release of OCP, the `main` branch will be given a tag matching the previously supported OCP version in `main`, then the `next` branch will be rebased onto `main`.
@@ -19,8 +19,8 @@ In July of 2020, our team [moved away from using the term `master`](https://www.
 
 All bugs, tasks, fixes or enhancements should be tracked as [GitHub Issues](https://github.com/RHsyseng/operator-utils/issues) & [Pull Requests](https://github.com/RHsyseng/operator-utils/pulls).
 
-- To contribute features targeting **OCP 4.7** only, use a local feature branch based off of & targeting `origin/main` with any PR's. Reference any JIRA/GitHub issues in PR's where applicable.
-- To contribute features targeting **OCP 4.9** only, use a local feature branch based off of & targeting `origin/next` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.9** only, use a local feature branch based off of & targeting `origin/main` with any PR's. Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.10** only, use a local feature branch based off of & targeting `origin/next` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
 - To contribute features targeting **both currently supported versions**, first complete the commit/PR work targeting `next`. Once that PR is merged to `next`, create a new PR with cherry-pick of the commit targeting `main`.
 - Contributions targeting OCP versions older than what's currently supported by `main` will typically no longer be accepted. Please contact contributors for further discussion. 
 
