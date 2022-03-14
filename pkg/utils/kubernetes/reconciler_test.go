@@ -264,7 +264,7 @@ func TestExtendedReconciler_Reconcile(t *testing.T) {
 
 	newPod := &v1.Pod{}
 	err = extReconciler.Service.Get(context.TODO(), request.NamespacedName, newPod)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 	assert.Len(t, newPod.GetFinalizers(), 0)
 	assert.Len(t, extReconciler.Finalizers, 2)
 	assert.True(t, f1Invoked)
