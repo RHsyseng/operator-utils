@@ -150,7 +150,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 			discoverer: FakeDiscoverer{
 				serverInfo: &version.Info{
 					Major: "1",
-					Minor: "19",
+					Minor: "23",
 				},
 				groupList: &v1.APIGroupList{
 					TypeMeta: v1.TypeMeta{},
@@ -166,7 +166,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 			discoverer: FakeDiscoverer{
 				serverInfo: &version.Info{
 					Major: "1",
-					Minor: "19+",
+					Minor: "23+",
 				},
 				groupList: &v1.APIGroupList{
 					TypeMeta: v1.TypeMeta{},
@@ -211,7 +211,7 @@ func TestClientCallVersionComparsion(t *testing.T) {
 		},
 	}
 
-	versionToTest := "4.6"
+	versionToTest := "4.10"
 	for _, tc := range testcases {
 		res, err := pv.CompareOpenShiftVersion(tc.discoverer, tc.config, versionToTest)
 		if tc.expectedErr {
