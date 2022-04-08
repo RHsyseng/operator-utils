@@ -12,7 +12,7 @@ require (
 	github.com/openshift/api v0.0.0-20211209135129-c58d9f695577
 	github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.50.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.55.1
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.19.1
 	k8s.io/api v0.23.0
