@@ -1,10 +1,11 @@
 package detector
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
-	"time"
 )
 
 // Detector represents a procedure that runs in the background, periodically auto-detecting features
@@ -60,7 +61,7 @@ func (d *Detector) Stop() {
 }
 
 func (d *Detector) autoDetectCapabilities() {
-	apiLists, err := d.dc.ServerResources()
+	_, apiLists, err := d.dc.ServerGroupsAndResources()
 	if err != nil {
 		return
 	}
