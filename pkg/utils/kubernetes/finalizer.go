@@ -32,12 +32,12 @@ func (e *ExtendedReconciler) UnregisterFinalizer(finalizer string) error {
 	return nil
 }
 
-//IsFinalizing An object is considered to be finalizing when its deletionTimestamp is not null
+// IsFinalizing An object is considered to be finalizing when its deletionTimestamp is not null
 func (e *ExtendedReconciler) isFinalizing(owner metav1.Object) bool {
 	return owner.GetDeletionTimestamp() != nil
 }
 
-//RemoveFinalizer removes a finalizer and updates the owner object
+// RemoveFinalizer removes a finalizer and updates the owner object
 func (e *ExtendedReconciler) removeFinalizer(owner client.Object, finalizer string) error {
 	err := validateFinalizerName(finalizer)
 	if err != nil {
@@ -47,7 +47,7 @@ func (e *ExtendedReconciler) removeFinalizer(owner client.Object, finalizer stri
 	return e.Service.Update(context.TODO(), owner)
 }
 
-//FinalizeOnDelete triggers all the finalizers registered for the given object in case it is being deleted
+// FinalizeOnDelete triggers all the finalizers registered for the given object in case it is being deleted
 func (e *ExtendedReconciler) finalizeOnDelete(owner client.Object) error {
 	if !e.isFinalizing(owner) {
 		return nil
