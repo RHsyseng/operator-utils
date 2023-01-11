@@ -1,10 +1,11 @@
 package detector
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
-	"time"
 )
 
 // Detector represents a procedure that runs in the background, periodically auto-detecting features
@@ -21,22 +22,22 @@ func NewAutoDetect(dc discovery.DiscoveryInterface) (*Detector, error) {
 	return &Detector{dc: dc, crds: map[runtime.Object]trigger{}}, nil
 }
 
-//AddCRDTrigger to run the trigger function,
-//the first time that the background scanner discovers that the CRD type specified exists
+// AddCRDTrigger to run the trigger function,
+// the first time that the background scanner discovers that the CRD type specified exists
 func (d *Detector) AddCRDTrigger(crd runtime.Object, trigger trigger) {
 	d.crds[crd] = trigger
 }
 
-//AddCRDsTrigger to run the trigger function,
-//the first time that the background scanner discovers that each of the CRD types specified exists
+// AddCRDsTrigger to run the trigger function,
+// the first time that the background scanner discovers that each of the CRD types specified exists
 func (d *Detector) AddCRDsTrigger(crds []runtime.Object, trigger trigger) {
 	for _, crd := range crds {
 		d.AddCRDTrigger(crd, trigger)
 	}
 }
 
-//AddCRDsWithTriggers to run the associated trigger function for the particular CRD,
-//the first time that the background scanner discovers that the CRD type specified exists
+// AddCRDsWithTriggers to run the associated trigger function for the particular CRD,
+// the first time that the background scanner discovers that the CRD type specified exists
 func (d *Detector) AddCRDsWithTriggers(crdsTriggers map[runtime.Object]trigger) {
 	for crd, trigger := range crdsTriggers {
 		d.AddCRDTrigger(crd, trigger)
@@ -60,13 +61,13 @@ func (d *Detector) Stop() {
 }
 
 func (d *Detector) autoDetectCapabilities() {
-	apiLists, err := d.dc.ServerResources()
-	if err != nil {
-		return
-	}
 	for crd, trigger := range d.crds {
 		crdGVK := crd.GetObjectKind().GroupVersionKind()
-		resourceExists, _ := d.resourceExists(apiLists, crdGVK.GroupVersion().String(), crdGVK.Kind)
+		apiLists, err := d.dc.ServerResourcesForGroupVersion(crdGVK.GroupVersion().String())
+		if err != nil {
+			return
+		}
+		resourceExists := d.resourceExists(apiLists, crdGVK.Kind)
 		if resourceExists {
 			stateManager := GetStateManager()
 			if stateManager.GetState(crdGVK.Kind) != true {
@@ -77,15 +78,11 @@ func (d *Detector) autoDetectCapabilities() {
 	}
 }
 
-func (d *Detector) resourceExists(apiLists []*metav1.APIResourceList, apiGroupVersion, kind string) (bool, error) {
-	for _, apiList := range apiLists {
-		if apiList.GroupVersion == apiGroupVersion {
-			for _, r := range apiList.APIResources {
-				if r.Kind == kind {
-					return true, nil
-				}
-			}
+func (d *Detector) resourceExists(apiList *metav1.APIResourceList, kind string) bool {
+	for _, r := range apiList.APIResources {
+		if r.Kind == kind {
+			return true
 		}
 	}
-	return false, nil
+	return false
 }

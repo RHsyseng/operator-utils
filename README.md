@@ -9,7 +9,7 @@ This library layers on top of the Operator SDK, having set of utilities function
 
 In July of 2020, our team [moved away from using the term `master`](https://www.redhat.com/en/blog/making-open-source-more-inclusive-eradicating-problematic-language) for our default branch. As a result, our branching scheme is as follows:
 
-- The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch supports **OCP 4.11** (K8S 1.24)
+- The [main](https://github.com/RHsyseng/operator-utils/tree/main) (default) branch supports **OCP 4.12** (K8S 1.25)
 - For versions of `operator-utils` targeting any release of OCP (starting with 4.2), please refer to the [tags](https://github.com/RHsyseng/operator-utils/tags) section.
   - tag `v1.X.Y` indicates support for OCP `vX.Y`
 - With each General Availability release of OCP a new tag will be created from the `v1.X.Y.x` branch then the `main` branch will point to the latest OCP version.
@@ -18,7 +18,7 @@ In July of 2020, our team [moved away from using the term `master`](https://www.
 
 All bugs, tasks, fixes or enhancements should be tracked as [GitHub Issues](https://github.com/RHsyseng/operator-utils/issues) & [Pull Requests](https://github.com/RHsyseng/operator-utils/pulls).
 
-- To contribute features targeting **OCP 4.11** only, use a local feature branch based off of & targeting `origin/main` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
+- To contribute features targeting **OCP 4.12** only, use a local feature branch based off of & targeting `origin/main` with any PR's, Reference any JIRA/GitHub issues in PR's where applicable.
 - To contribute features targeting **both currently supported versions**, first complete the commit/PR work targeting `main`. Once that PR is merged to `main`, create a new PR with cherry-pick of the commit targeting the branch of the specific OCP version that it should be backported to.
 
 ## Declaring operator-utils dependency
