@@ -1,14 +1,17 @@
 package test
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
 	"github.com/RHsyseng/operator-utils/pkg/resource/test"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"reflect"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
 )
 
 func TestCompareServices(t *testing.T) {
@@ -114,4 +117,43 @@ func TestCompareCombined(t *testing.T) {
 	assert.Equal(t, deltaMap[dcType].Updated[0].GetName(), "dc2", "Expected updated dc called dc2")
 	assert.Len(t, deltaMap[dcType].Removed, 1, "Expected 1 removed dc")
 	assert.Equal(t, deltaMap[dcType].Removed[0].GetName(), "dc3", "Expected removed dc called dc3")
+}
+
+func TestCompareDeployment(t *testing.T) {
+	dep1 := appsv1.Deployment{
+		Spec: appsv1.DeploymentSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU: *resource.NewScaledQuantity(1000000, resource.Milli),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	dep2 := appsv1.Deployment{
+		Spec: appsv1.DeploymentSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU: *resource.NewScaledQuantity(1, resource.Kilo),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	assert.True(t, compare.Equals(dep1, dep2))
 }
