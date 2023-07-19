@@ -3,7 +3,6 @@ package test
 import (
 	"context"
 
-	"github.com/RHsyseng/operator-utils/pkg/logs"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	consolev1 "github.com/openshift/api/console/v1"
@@ -15,12 +14,13 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	ctrl "sigs.k8s.io/controller-runtime"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
-var log = logs.GetLogger("operatorutils.test")
+var log = ctrl.Log.WithName("operatorutils.test")
 
 type MockPlatformService struct {
 	Client              clientv1.Client
@@ -112,7 +112,7 @@ func (builder *MockPlatformServiceBuilder) Build() *MockPlatformService {
 		}
 	}
 	client := fake.NewFakeClientWithScheme(scheme)
-	log.Debugf("Fake client created as %v", client)
+	log.V(1).Info("Fake client created as %v", client)
 	mockImageStreamTag := &MockImageStreamTag{}
 	return &MockPlatformService{
 		Client: client,
