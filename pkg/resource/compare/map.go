@@ -1,12 +1,13 @@
 package compare
 
 import (
-	"github.com/RHsyseng/operator-utils/pkg/logs"
 	"reflect"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var logger = logs.GetLogger("comparator")
+var logger = ctrl.Log.WithName("comparator")
 
 type MapComparator struct {
 	Comparator ResourceComparator

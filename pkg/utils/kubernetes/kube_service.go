@@ -3,16 +3,15 @@ package kubernetes
 import (
 	"context"
 
-	"github.com/RHsyseng/operator-utils/pkg/logs"
-
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 	cachev1 "sigs.k8s.io/controller-runtime/pkg/cache"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-var log = logs.GetLogger("operatorutils.kubernetes")
+var log = ctrl.Log.WithName("operatorutils.kubernetes")
 
 type KubernetesPlatformService struct {
 	client      clientv1.Client
@@ -24,7 +23,7 @@ type KubernetesPlatformService struct {
 func GetInstance(mgr manager.Manager) KubernetesPlatformService {
 	imageClient, err := imagev1.NewForConfig(mgr.GetConfig())
 	if err != nil {
-		log.Errorf("Error getting image client: %v", err)
+		log.Error(err, "Error getting image client")
 		return KubernetesPlatformService{}
 	}
 
