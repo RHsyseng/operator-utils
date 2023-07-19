@@ -7,6 +7,7 @@ require (
 	github.com/go-openapi/spec v0.19.9
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/validate v0.19.11
+	github.com/go-test/deep v1.1.0
 	github.com/google/gnostic v0.5.7-v3refs
 	github.com/openshift/api v0.0.0-20211209135129-c58d9f695577
 	github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3

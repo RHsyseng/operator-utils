@@ -8,6 +8,7 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/go-test/deep"
 	oappsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -674,10 +675,11 @@ func EqualPairs(objects [][2]interface{}) bool {
 }
 
 func Equals(deployed interface{}, requested interface{}) bool {
-	equal := reflect.DeepEqual(deployed, requested)
+	diffs := deep.Equal(deployed, requested)
+	equal := len(diffs) == 0
 	if !equal {
 		if logger.GetSink().Enabled(1) {
-			logger.V(1).Info("Objects are not equal", "deployed", deployed, "requested", requested)
+			logger.V(1).Info("Objects are not equal", "deployed", deployed, "requested", requested, "diffs", diffs)
 		} else {
 			logger.Info("Objects are not equal. For more details set the Operator log level to DEBUG.")
 		}
