@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	cachev1 "sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -77,6 +78,10 @@ func (service *KubernetesPlatformService) GetScheme() *runtime.Scheme {
 
 func (service *KubernetesPlatformService) Status() clientv1.StatusWriter {
 	return service.client.Status()
+}
+
+func (service *KubernetesPlatformService) SubResource(subResource string) client.SubResourceClient {
+	return service.client.SubResource(subResource)
 }
 
 func (service *KubernetesPlatformService) IsMockService() bool {

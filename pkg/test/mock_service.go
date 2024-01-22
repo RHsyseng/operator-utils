@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	clientv1 "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
@@ -36,6 +37,7 @@ type MockPlatformService struct {
 	ImageStreamTagsFunc func(namespace string) imagev1.ImageStreamTagInterface
 	GetSchemeFunc       func() *runtime.Scheme
 	StatusFunc          func() clientv1.StatusWriter
+	SubResourceFunc     func(subResource string) client.SubResourceClient
 }
 
 var knownTypes = map[schema.GroupVersion][]runtime.Object{
@@ -111,7 +113,7 @@ func (builder *MockPlatformServiceBuilder) Build() *MockPlatformService {
 			scheme.AddKnownTypes(gv, t)
 		}
 	}
-	client := fake.NewFakeClientWithScheme(scheme)
+	client := fake.NewClientBuilder().WithScheme(scheme).Build()
 	log.V(1).Info("Fake client created as %v", client)
 	mockImageStreamTag := &MockImageStreamTag{}
 	return &MockPlatformService{
@@ -149,6 +151,9 @@ func (builder *MockPlatformServiceBuilder) Build() *MockPlatformService {
 		},
 		StatusFunc: func() clientv1.StatusWriter {
 			return client.Status()
+		},
+		SubResourceFunc: func(subResource string) clientv1.SubResourceClient {
+			return client.SubResource(subResource)
 		},
 	}
 }
@@ -195,6 +200,10 @@ func (service *MockPlatformService) GetScheme() *runtime.Scheme {
 
 func (service *MockPlatformService) Status() clientv1.StatusWriter {
 	return service.StatusFunc()
+}
+
+func (service *MockPlatformService) SubResource(subResource string) clientv1.SubResourceClient {
+	return service.SubResourceFunc(subResource)
 }
 
 func (service *MockPlatformService) IsMockService() bool {
