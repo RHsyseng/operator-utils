@@ -69,6 +69,8 @@ func MapKnownVersion(info PlatformInfo) OpenShiftVersion {
 		"1.25":  "4.12",
 		"1.26+": "4.13",
 		"1.26":  "4.13",
+		"1.27+": "4.14",
+		"1.27":  "4.14",
 	}
 	return OpenShiftVersion{Version: k8sToOcpMap[info.K8SVersion]}
 }

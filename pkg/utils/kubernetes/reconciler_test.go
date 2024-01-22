@@ -3,6 +3,8 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/RHsyseng/operator-utils/pkg/test"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
@@ -10,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 type MockReconciler struct {
@@ -124,9 +125,12 @@ func TestExtendedReconciler_FinalizeOnDelete(t *testing.T) {
 	assert.Len(t, pod.GetFinalizers(), 2)
 	assert.Len(t, extReconciler.Finalizers, 2)
 
-	pod.SetDeletionTimestamp(&metav1.Time{})
-	extReconciler.Service.Update(context.TODO(), pod)
-
+	extReconciler.Service.Delete(context.TODO(), pod)
+	err = extReconciler.Service.Get(context.TODO(), types.NamespacedName{
+		Namespace: pod.Namespace,
+		Name:      pod.Name,
+	}, pod)
+	assert.Nil(t, err)
 	err = extReconciler.finalizeOnDelete(pod)
 	assert.Nil(t, err)
 	assert.Empty(t, pod.GetFinalizers())
@@ -149,7 +153,14 @@ func TestExtendedReconciler_FinalizeOnDeleteUnregisteredFinalizer(t *testing.T) 
 	pod.SetDeletionTimestamp(&metav1.Time{})
 	extReconciler.Service.Create(context.TODO(), pod)
 
-	err := extReconciler.finalizeOnDelete(pod)
+	extReconciler.Service.Delete(context.TODO(), pod)
+	err := extReconciler.Service.Get(context.TODO(), types.NamespacedName{
+		Namespace: pod.Namespace,
+		Name:      pod.Name,
+	}, pod)
+	assert.Nil(t, err)
+
+	err = extReconciler.finalizeOnDelete(pod)
 	assert.Errorf(t, err, "finalizer f2 does not have a Finalizer handler registered")
 
 	newPod := &v1.Pod{}
@@ -254,9 +265,12 @@ func TestExtendedReconciler_Reconcile(t *testing.T) {
 	assert.Len(t, pod.GetFinalizers(), 2)
 	assert.Len(t, extReconciler.Finalizers, 2)
 
-	time := metav1.Now()
-	pod.SetDeletionTimestamp(&time)
-	extReconciler.Service.Update(context.TODO(), pod)
+	extReconciler.Service.Delete(context.TODO(), pod)
+	err = extReconciler.Service.Get(context.TODO(), types.NamespacedName{
+		Namespace: pod.Namespace,
+		Name:      pod.Name,
+	}, pod)
+	assert.Nil(t, err)
 
 	result, err = extReconciler.Reconcile(request)
 	assert.Nil(t, err)

@@ -21,5 +21,6 @@ type PlatformService interface {
 	ImageStreamTags(namespace string) imagev1.ImageStreamTagInterface
 	GetScheme() *runtime.Scheme
 	Status() client.StatusWriter
+	SubResource(subResource string) client.SubResourceClient
 	IsMockService() bool
 }
